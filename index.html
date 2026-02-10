@@ -1,0 +1,3055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CAUSENTIA — Sovereign Crisis Early Warning System</title>
+<meta name="description" content="Open-source AI-powered early warning system for sovereign economic crises. Live dashboard with Collapse Index, Fracture Index, Monte Carlo simulation, and novel crisis indicators.">
+<meta name="author" content="Mohamed Ibrahim">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/*══════════════════════════════════════════════════════════════
+  CAUSENTIA v2.1 — Academic Research Dashboard
+  Design: Montblanc Black × Phosphorescent Green
+  Author: Mohamed Ibrahim
+  License: MIT
+══════════════════════════════════════════════════════════════*/
+:root{
+  --d0:#030303;--d1:#070707;--d2:#0b0b0b;--d3:#101010;--d4:#161616;--d5:#1c1c1c;--d6:#222;
+  --g0:#00ff88;--g1:#00e67a;--g2:#00cc6c;--g3:rgba(0,255,136,.12);--g4:rgba(0,255,136,.06);
+  --r0:#ff2d55;--r1:rgba(255,45,85,.15);--o0:#ff9500;--y0:#ffcc00;
+  --t1:#eaeaea;--t2:#999;--t3:#666;--t4:#444;--t5:#2a2a2a;--t6:#222;--t7:#1a1a1a;
+  --mono:'JetBrains Mono',monospace;--sans:'Outfit',system-ui,sans-serif;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;font-size:15px}
+body{font-family:var(--sans);background:var(--d0);color:var(--t1);min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,136,.008) 3px,rgba(0,255,136,.008) 4px);pointer-events:none;z-index:9999}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--d0)}::-webkit-scrollbar-thumb{background:var(--g2);border-radius:2px}
+a{color:var(--g0);text-decoration:none}
+
+/* ─── ACCESSIBILITY ─── */
+:focus-visible{outline:2px solid var(--g0);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}
+
+/* ─── NAV ─── */
+.nav{position:sticky;top:0;z-index:100;height:48px;background:rgba(3,3,3,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--d5);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.nav-brand{font-family:var(--mono);font-weight:800;font-size:.95rem;letter-spacing:5px;color:var(--g0);text-shadow:0 0 18px var(--g3)}
+.nav-mid{display:flex;align-items:center;gap:10px}
+.live-dot{width:5px;height:5px;background:var(--g0);border-radius:50%;box-shadow:0 0 6px var(--g0);animation:pulse 1.5s ease infinite}
+@keyframes pulse{50%{opacity:.35}}
+.nav-clock{font-family:var(--mono);font-size:.6rem;color:var(--t4);letter-spacing:1px}
+.nav-live{font-family:var(--mono);font-size:.55rem;letter-spacing:2px;color:var(--g0)}
+.nav-r{display:flex;gap:6px}
+.nav-r a{font-family:var(--mono);font-size:.5rem;letter-spacing:1.5px;padding:4px 10px;border:1px solid var(--d5);color:var(--t3);border-radius:2px;transition:all .2s var(--ease)}
+.nav-r a:hover{border-color:var(--g0);color:var(--g0)}
+
+/* ─── ALERT STRIP ─── */
+.alert-strip{margin:0 20px;background:var(--d1);border:1px solid rgba(255,45,85,.2);border-left:3px solid var(--r0);padding:8px 16px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.58rem;color:var(--t2);animation:alertFade 1s var(--ease)}
+@keyframes alertFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.alert-dot{width:6px;height:6px;background:var(--r0);border-radius:50%;box-shadow:0 0 8px var(--r1);animation:alertPulse 2s ease infinite;flex-shrink:0}
+@keyframes alertPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.alert-text{flex:1}
+.alert-text strong{color:var(--r0)}
+.alert-ts{color:var(--t4);font-size:.45rem;flex-shrink:0}
+
+/* ─── HERO ─── */
+.hero{padding:28px 20px 20px;text-align:center;position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:1px;background:linear-gradient(90deg,transparent,var(--d5),transparent)}
+.hero-sub{font-family:var(--mono);font-size:.55rem;letter-spacing:4px;color:var(--t4);text-transform:uppercase;margin-bottom:4px}
+.hero-tag{font-family:var(--mono);font-size:.5rem;color:var(--t4);letter-spacing:1px}
+
+/* ─── COUNTERS ─── */
+.counters{display:flex;justify-content:center;gap:1px;margin:16px 0 12px;flex-wrap:wrap}
+.ctr{background:var(--d1);border:1px solid var(--d5);padding:12px 22px;min-width:110px;position:relative;text-align:center;transition:all .3s var(--ease);cursor:default}
+.ctr:hover{background:var(--d2);border-color:var(--d6)}
+.ctr::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ctr.cr::before{background:var(--r0);box-shadow:0 0 8px var(--r1)}.ctr.dg::before{background:var(--o0)}.ctr.ct::before{background:var(--y0)}.ctr.sf::before{background:var(--g0)}
+.ctr.fi::before{background:linear-gradient(90deg,var(--g0),var(--y0),var(--r0))}
+.ctr.cei::before{background:linear-gradient(90deg,var(--g2),#6366f1)}
+.ctr-n{font-family:var(--mono);font-size:1.8rem;font-weight:800;line-height:1}
+.ctr-n.cr{color:var(--r0);text-shadow:0 0 15px var(--r1)}.ctr-n.dg{color:var(--o0)}.ctr-n.ct{color:var(--y0)}.ctr-n.sf{color:var(--g0);text-shadow:0 0 12px var(--g3)}
+.ctr-n.fi{background:linear-gradient(135deg,var(--g0),var(--y0),var(--r0));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ctr-n.cei{background:linear-gradient(135deg,var(--g2),#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ctr-l{font-family:var(--mono);font-size:.45rem;letter-spacing:2px;color:var(--t4);text-transform:uppercase;margin-top:2px}
+
+/* ─── TOOLTIP ─── */
+.tip{position:relative}
+.tip .tip-text{visibility:hidden;opacity:0;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--d4);border:1px solid var(--d6);color:var(--t2);font-family:var(--sans);font-size:.6rem;padding:8px 12px;border-radius:3px;white-space:normal;width:220px;text-align:left;line-height:1.45;z-index:50;transition:opacity .2s var(--ease);pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.tip .tip-text::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--d4)}
+.tip:hover .tip-text{visibility:visible;opacity:1}
+
+/* ─── TICKER ─── */
+.ticker-w{background:var(--d1);border-top:1px solid var(--d5);border-bottom:1px solid var(--d5);padding:6px 0;margin:0 20px 14px;overflow:hidden}
+.ticker{display:flex;animation:scroll 50s linear infinite;white-space:nowrap}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.tk{font-family:var(--mono);font-size:.58rem;padding:0 16px;color:var(--t4);display:flex;align-items:center;gap:4px}
+.tk .up{color:var(--g0)}.tk .dn{color:var(--r0)}.tk .nm{color:var(--t2)}
+.tk-critical{animation:tk-pulse 1.5s ease-in-out infinite}
+@keyframes tk-pulse{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.92;filter:brightness(1.08)}}
+
+/* ─── INDEX BANNERS ─── */
+.idx-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:0 20px 14px}
+.idx{background:var(--d1);border:1px solid var(--d5);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
+.idx::before{content:'';position:absolute;top:0;left:0;bottom:0;width:2px}
+.idx.fi-b::before{background:linear-gradient(180deg,var(--g0),var(--r0))}.idx.cei-b::before{background:linear-gradient(180deg,var(--g2),#6366f1)}
+.idx-info{display:flex;align-items:center;gap:14px}
+.idx-icon{width:36px;height:36px;border:1.5px solid var(--g0);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.idx-name{font-family:var(--mono);font-size:.5rem;letter-spacing:3px;color:var(--t4);text-transform:uppercase}
+.idx-desc{font-size:.65rem;color:var(--t3);margin-top:1px}
+.idx-score{text-align:right}
+.idx-val{font-family:var(--mono);font-size:2rem;font-weight:800;line-height:1}
+.idx-status{font-family:var(--mono);font-size:.45rem;letter-spacing:1.5px;margin-top:2px}
+.idx-time{font-family:var(--mono);font-size:.4rem;color:var(--t4);margin-top:1px}
+
+/* ─── TABS ─── */
+.tabs-w{padding:0 20px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.tabs{display:flex;gap:1px;min-width:max-content}
+.tab{font-family:var(--mono);font-size:.5rem;letter-spacing:1.5px;padding:8px 14px;background:var(--d1);border:1px solid var(--d5);color:var(--t4);cursor:pointer;transition:all .2s var(--ease);text-transform:uppercase;white-space:nowrap}
+.tab:hover{color:var(--t2);border-color:var(--d6)}.tab.on{background:var(--g0);color:var(--d0);border-color:var(--g0);font-weight:700;box-shadow:0 0 12px var(--g3)}
+
+/* ─── PANELS ─── */
+.content{padding:0 20px 40px}.pnl{display:none}.pnl.on{display:block;animation:fadeUp .25s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── CARDS ─── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px}
+.card{background:var(--d1);border:1px solid var(--d5);padding:14px 16px;cursor:pointer;transition:all .2s var(--ease);position:relative}
+.card:hover{background:var(--d2);border-color:var(--d6)}
+.card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:2px}
+.card.cr::before{background:var(--r0)}.card.dg::before{background:var(--o0)}.card.ct::before{background:var(--y0)}.card.sf::before{background:var(--g0)}
+
+/* CRISIS PULSE — critical cards glow */
+.card.cr{animation:crPulse 2.5s ease-in-out infinite}
+@keyframes crPulse{
+  0%,100%{box-shadow:0 0 0 rgba(255,45,85,0);border-color:var(--d5)}
+  50%{box-shadow:0 0 12px rgba(255,45,85,.2);border-color:rgba(255,45,85,.4)}
+}
+
+.c-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.c-name{font-size:.78rem;font-weight:600}.c-ci{font-family:var(--mono);font-size:1.5rem;font-weight:800;line-height:1}
+.c-ci.cr{color:var(--r0)}.c-ci.dg{color:var(--o0)}.c-ci.ct{color:var(--y0)}.c-ci.sf{color:var(--g0)}
+.c-bar{height:2px;background:var(--d5);margin:6px 0;border-radius:1px;overflow:hidden}
+.c-bar-f{height:100%;border-radius:1px;transition:width 1s var(--ease)}
+.c-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.45rem;letter-spacing:1.5px;text-transform:uppercase}
+.c-risk.cr{color:var(--r0)}.c-risk.dg{color:var(--o0)}.c-risk.ct{color:var(--y0)}.c-risk.sf{color:var(--g0)}
+.c-win{color:var(--t4)}
+.c-trend{font-family:var(--mono);font-size:.6rem;margin-left:4px}
+.c-econ{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--d5)}
+.c-ev{font-family:var(--mono);font-size:.65rem;font-weight:600;text-align:center}.c-el{font-size:.38rem;letter-spacing:1px;text-transform:uppercase;color:var(--t4);text-align:center}
+
+/* ─── INNOVATIONS ─── */
+.inno-section{margin-bottom:16px}
+.inno-cat{font-family:var(--mono);font-size:.5rem;letter-spacing:3px;color:var(--t4);text-transform:uppercase;padding:8px 0 6px;border-bottom:1px solid var(--d5);margin-bottom:1px}
+.inno-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px}
+.inno{background:var(--d1);border:1px solid var(--d5);padding:16px;transition:all .3s var(--ease);position:relative}
+.inno:hover{border-color:var(--g0);box-shadow:0 0 16px var(--g3)}
+.inno-badge{position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:.38rem;letter-spacing:1.5px;padding:2px 6px;border-radius:1px;text-transform:uppercase;font-weight:700}
+.inno-badge.cl{background:var(--g0);color:var(--d0)}.inno-badge.gp{background:#10a37f;color:#fff}
+.inno-badge.gm{background:#4285f4;color:#fff}.inno-badge.ds{background:#6366f1;color:#fff}
+.inno-ico{font-size:1.4rem;margin-bottom:8px}
+.inno-name{font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--g0);margin-bottom:3px}
+.inno-desc{font-size:.68rem;color:var(--t3);line-height:1.45}
+
+/* ─── MC ─── */
+.mc-box{background:var(--d1);border:1px solid var(--d5);padding:20px}
+.mc-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.mc-title{font-family:var(--mono);font-size:.55rem;letter-spacing:2px;color:var(--g0);text-transform:uppercase}
+.mc-ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mc-sel{font-family:var(--mono);font-size:.6rem;background:var(--d2);border:1px solid var(--d5);color:var(--t1);padding:5px 10px;border-radius:2px}
+.mc-btn{font-family:var(--mono);font-size:.5rem;letter-spacing:1.5px;padding:5px 14px;background:var(--g0);color:var(--d0);border:none;border-radius:2px;cursor:pointer;font-weight:700;transition:all .2s var(--ease)}
+.mc-btn:hover{box-shadow:0 0 16px var(--g3)}
+.mc-res{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;margin-bottom:16px}
+.mc-s{background:var(--d2);padding:10px;text-align:center}
+.mc-sv{font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--g0)}
+.mc-sl{font-family:var(--mono);font-size:.4rem;letter-spacing:1.5px;color:var(--t4);text-transform:uppercase;margin-top:2px}
+.hist{display:flex;align-items:flex-end;height:140px;gap:1px;margin-top:12px}.hist-bar{flex:1;min-width:3px;border-radius:1px 1px 0 0;transition:height .4s var(--ease);opacity:.7}
+.hist-bar:hover{opacity:1}.hist-bar.dz{background:var(--r0)!important}
+.hist-lbl{display:flex;justify-content:space-between;margin-top:4px;font-family:var(--mono);font-size:.4rem;color:var(--t4)}
+
+/* ─── FRACTURE DETAIL ─── */
+.fx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px}
+.fx{background:var(--d1);border:1px solid var(--d5);padding:16px}
+.fx-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.fx-name{font-family:var(--mono);font-size:.5rem;letter-spacing:1.5px;color:var(--t4);text-transform:uppercase}
+.fx-wt{font-family:var(--mono);font-size:.45rem;color:var(--g2);opacity:.6}
+.fx-val{font-family:var(--mono);font-size:1.6rem;font-weight:700}
+.fx-bar{height:3px;background:var(--d5);margin-top:6px;border-radius:1px;overflow:hidden}
+.fx-bar-f{height:100%;border-radius:1px;transition:width 1.2s var(--ease)}
+.fx-desc{font-size:.62rem;color:var(--t4);margin-top:6px;line-height:1.4}
+
+/* ─── FOOTER ─── */
+footer{text-align:center;padding:24px 20px;border-top:1px solid var(--d5);margin-top:30px}
+.f-brand{font-family:var(--mono);font-size:.5rem;letter-spacing:3px;color:var(--g0);opacity:.35;margin-bottom:6px}
+.f-legal{font-size:.55rem;color:var(--t4);max-width:560px;margin:0 auto;line-height:1.5}
+.f-links{margin-top:8px;display:flex;justify-content:center;gap:16px}
+.f-links a{font-family:var(--mono);font-size:.45rem;letter-spacing:1px;color:var(--t4);transition:color .2s}
+.f-links a:hover{color:var(--g0)}
+
+@media(max-width:768px){
+  .counters{flex-direction:column;align-items:stretch}.ctr{min-width:auto}
+  .idx-row{grid-template-columns:1fr}.idx{flex-direction:column;gap:10px;text-align:center}
+  .idx-score{text-align:center}.mc-res{grid-template-columns:repeat(2,1fr)}
+  .alert-strip{flex-direction:column;text-align:center;gap:6px}
+}
+</style>
+</head>
+<body>
+
+<div id="alertBar" style="display:none;background:linear-gradient(90deg,rgba(244,67,54,0.15),rgba(244,67,54,0.05));border-bottom:1px solid rgba(244,67,54,0.3);padding:8px 20px;font-family:var(--mono);font-size:.42rem;z-index:999;position:relative">
+  <div style="display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto">
+    <div id="alertBarContent" style="display:flex;align-items:center;gap:8px;flex:1;overflow-x:auto"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+      <button onclick="openAlertPanel()" style="background:none;border:1px solid var(--g1)44;color:var(--g1);padding:3px 10px;font-family:var(--mono);font-size:.38rem;cursor:pointer;border-radius:2px">🔔 SUBSCRIBE</button>
+      <span onclick="document.getElementById('alertBar').style.display='none'" style="color:var(--t4);cursor:pointer;font-size:.8rem;padding:0 4px">✕</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <div class="nav-brand">CAUSENTIA</div>
+  <div class="nav-mid">
+    <div class="live-dot" aria-hidden="true"></div>
+    <span class="nav-live">LIVE</span>
+    <span class="nav-clock" id="clock">—</span>
+  </div>
+  <div class="nav-r">
+    <a href="https://github.com/causentia" target="_blank" rel="noopener">GITHUB</a>
+    <a href="https://doi.org/10.5281/zenodo.causentia" target="_blank" rel="noopener">ZENODO</a>
+    <a href="#methodology">METHODOLOGY</a>
+  </div>
+</nav>
+
+<!-- SYSTEM ALERT STRIP -->
+<div class="alert-strip" id="alertStrip" role="alert">
+  <div class="alert-dot" aria-hidden="true"></div>
+  <div class="alert-text" id="alertText">Initializing system alerts...</div>
+  <div class="alert-ts" id="alertTs">—</div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-sub">Sovereign Crisis Early Warning System</div>
+  <div class="hero-tag">Open-source research platform &bull; Peer-reviewed methodology &bull; 40+ countries &bull; Real-time data</div>
+
+  <div class="counters">
+    <div class="ctr cr tip"><div class="ctr-n cr" id="nCr">9</div><div class="ctr-l">Critical</div><span class="tip-text">Countries with Collapse Index &ge; 70. Estimated failure window: 0–6 months.</span></div>
+    <div class="ctr dg tip"><div class="ctr-n dg" id="nDg">10</div><div class="ctr-l">Danger</div><span class="tip-text">Countries with CI 50–70. Elevated risk. Estimated window: 6–12 months.</span></div>
+    <div class="ctr ct tip"><div class="ctr-n ct" id="nCt">12</div><div class="ctr-l">Caution</div><span class="tip-text">Countries with CI 25–50. Watchlist status. Estimated window: 12–24 months.</span></div>
+    <div class="ctr sf tip"><div class="ctr-n sf" id="nSf">9</div><div class="ctr-l">Safe</div><span class="tip-text">Countries with CI &lt; 25. Normal economic stress levels.</span></div>
+    <div class="ctr fi tip"><div class="ctr-n fi" id="nFi">58</div><div class="ctr-l">Fracture</div><span class="tip-text">Fracture Index: Global systemic fragility score (0–100). Measures structural integrity of connections between economies.</span></div>
+    <div class="ctr cei tip"><div class="ctr-n cei" id="nCei">47</div><div class="ctr-l">Entropy</div><span class="tip-text">CausalEntropy Index: Measures how easily small shocks cascade into systemic failures (0–100).</span></div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-w" aria-hidden="true"><div class="ticker" id="ticker"></div></div>
+
+<!-- INDEX BANNERS -->
+<div class="idx-row">
+  <div class="idx fi-b tip">
+    <div class="idx-info">
+      <div class="idx-icon" aria-hidden="true">⬡</div>
+      <div><div class="idx-name">Fracture Index</div><div class="idx-desc">Global Systemic Fragility Monitor</div></div>
+    </div>
+    <div class="idx-score">
+      <div class="idx-val" style="color:var(--y0)" id="fiVal">58.3</div>
+      <div class="idx-status" style="color:var(--o0)">STRESSED</div>
+      <div class="idx-time" id="fiTime">—</div>
+    </div>
+    <span class="tip-text" style="bottom:auto;top:calc(100% + 8px)">FI = [&Sigma;(S<sub>i</sub> &times; W<sub>i</sub>)] &times; DM &times; (1 + EV). Components: Trade Fragmentation, Alliance Cohesion, Institutional Stress, Resource Scarcity, Strategic Stress.</span>
+  </div>
+  <div class="idx cei-b tip">
+    <div class="idx-info">
+      <div class="idx-icon" style="border-color:#818cf8" aria-hidden="true">◈</div>
+      <div><div class="idx-name">CausalEntropy Index</div><div class="idx-desc">Systemic Causal Fragility</div></div>
+    </div>
+    <div class="idx-score">
+      <div class="idx-val" style="color:#a5b4fc" id="ceiVal">47.1</div>
+      <div class="idx-status" style="color:#818cf8">FLUX</div>
+      <div class="idx-time" id="ceiTime">—</div>
+    </div>
+    <span class="tip-text" style="bottom:auto;top:calc(100% + 8px)">CEI = [&alpha;&middot;IC + &beta;&middot;RL + &gamma;&middot;IN] / RD. Measures how easily micro-events cascade into macro-collapse. Based on entropy dynamics.</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-w"><div class="tabs" id="tabBar" role="tablist">
+  <button class="tab on" data-p="overview" role="tab" aria-selected="true">OVERVIEW</button>
+  <button class="tab" data-p="countries" role="tab">COUNTRIES</button>
+  <button class="tab" data-p="fracture" role="tab">FRACTURE INDEX</button>
+  <button class="tab" data-p="montecarlo" role="tab">MONTE CARLO</button>
+  <button class="tab" data-p="innovations" role="tab">INNOVATIONS</button>
+  <button class="tab" data-p="methodology" role="tab">METHODOLOGY</button>
+  <button class="tab" data-p="compare" role="tab" aria-selected="false">COMPARE</button>
+  <button class="tab" data-p="heatmap" role="tab" aria-selected="false">HEATMAP</button>
+  <button class="tab" data-p="scenarios" role="tab" aria-selected="false">SCENARIOS</button>
+  <button class="tab" data-p="warnings" role="tab" aria-selected="false">WARNINGS</button>
+  <button class="tab" data-p="api" role="tab" aria-selected="false">API</button>
+  <button class="tab" data-p="contagion" role="tab" aria-selected="false">CONTAGION</button>
+  <button class="tab" data-p="dive" role="tab" aria-selected="false" id="tabDive" style="display:none">DEEP DIVE</button>
+</div></div>
+
+<!-- CONTENT -->
+<div class="content">
+  <div class="pnl on" id="p-overview" role="tabpanel"><div class="grid" id="gOverview"></div></div>
+  <div class="pnl" id="p-countries" role="tabpanel"><div class="grid" id="gCountries"></div></div>
+  <div class="pnl" id="p-fracture" role="tabpanel"><div class="fx-grid" id="gFracture"></div></div>
+  <div class="pnl" id="p-montecarlo" role="tabpanel">
+    <div class="mc-box">
+      <div class="mc-hdr"><div class="mc-title">Monte Carlo Crisis Simulation — 10,000 Scenarios</div>
+        <div class="mc-ctrl">
+          <select class="mc-sel" id="mcSel" aria-label="Select country for simulation"></select>
+          <button class="mc-btn" onclick="runMC()" aria-label="Run Monte Carlo simulation">&#9654; RUN</button>
+        </div>
+      </div>
+      <div class="mc-res" id="mcRes" style="display:none"></div>
+      <div class="hist" id="mcHist" role="img" aria-label="Monte Carlo result distribution histogram"></div>
+      <div class="hist-lbl"><span>CI 0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+    </div>
+  </div>
+  <div class="pnl" id="p-innovations" role="tabpanel"><div id="gInno"></div></div>
+  <div class="pnl" id="p-methodology" role="tabpanel">
+    <div class="mc-box" id="methPanel">
+      <div class="mc-title" style="margin-bottom:14px;font-size:.6rem">Methodology — Collapse Index (CI)</div>
+      <p style="color:var(--t2);font-size:.72rem;line-height:1.7;margin-bottom:12px">
+        The Collapse Index quantifies the probability of sovereign economic policy failure using a multi-dimensional stress-absorption-resilience framework. The index integrates 15 dimensions across five stress factors, three absorption factors, and two resilience factors, producing a composite score from 0 (stable) to 100 (imminent collapse).
+      </p>
+      <p style="color:var(--g0);font-family:var(--mono);font-size:.7rem;text-align:center;margin:16px 0;letter-spacing:1px">
+        CI = [&Sigma;(S<sub>i</sub> &times; W<sub>i</sub>)] / (A + R) &times; 100
+      </p>
+      <p style="color:var(--t3);font-size:.65rem;line-height:1.7;margin-bottom:10px">
+        <strong style="color:var(--t2)">Stress (S):</strong> Expectation gap, velocity of change, internal contradiction, external shocks, market pressure (5 weighted components).
+      </p>
+      <p style="color:var(--t3);font-size:.65rem;line-height:1.7;margin-bottom:10px">
+        <strong style="color:var(--t2)">Absorption (A):</strong> Foreign reserves adequacy, fiscal space, institutional credibility (3 components, averaged).
+      </p>
+      <p style="color:var(--t3);font-size:.65rem;line-height:1.7;margin-bottom:10px">
+        <strong style="color:var(--t2)">Resilience (R):</strong> Historical recovery capacity, policy flexibility (2 components, geometric mean).
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;margin-top:16px">
+        <div style="background:var(--d2);padding:10px;text-align:center"><div style="font-family:var(--mono);font-size:.7rem;color:var(--g0)">0–25</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-top:2px">SAFE</div></div>
+        <div style="background:var(--d2);padding:10px;text-align:center"><div style="font-family:var(--mono);font-size:.7rem;color:var(--y0)">25–50</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-top:2px">CAUTION</div></div>
+        <div style="background:var(--d2);padding:10px;text-align:center"><div style="font-family:var(--mono);font-size:.7rem;color:var(--o0)">50–70</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-top:2px">DANGER</div></div>
+        <div style="background:var(--d2);padding:10px;text-align:center"><div style="font-family:var(--mono);font-size:.7rem;color:var(--r0)">70–85</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-top:2px">CRITICAL</div></div>
+        <div style="background:var(--d2);padding:10px;text-align:center"><div style="font-family:var(--mono);font-size:.7rem;color:#fff">85–100</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-top:2px">COLLAPSE</div></div>
+      </div>
+      <p style="color:var(--t3);font-size:.6rem;line-height:1.7;margin-top:16px">
+        Full methodology, validation datasets, and reproducibility package available on
+        <a href="#">Zenodo</a> and <a href="#">Code Ocean</a>. Source code available on <a href="#">GitHub</a>.
+        Data sources: World Bank Open Data, IMF World Economic Outlook, GDELT Project, SIPRI, UN COMTRADE.
+      </p>
+    </div>
+  </div>
+  <div id="p-compare" class="pnl" role="tabpanel">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;align-items:center">
+      <span style="font-family:var(--mono);font-size:.55rem;color:var(--g1);letter-spacing:2px">SELECT COUNTRIES TO COMPARE (2-4)</span>
+      <select id="cmp1" class="mc-sel" style="flex:1;min-width:150px"><option value="">Country 1…</option></select>
+      <select id="cmp2" class="mc-sel" style="flex:1;min-width:150px"><option value="">Country 2…</option></select>
+      <select id="cmp3" class="mc-sel" style="flex:1;min-width:150px"><option value="">Country 3 (optional)…</option></select>
+      <select id="cmp4" class="mc-sel" style="flex:1;min-width:150px"><option value="">Country 4 (optional)…</option></select>
+      <button onclick="runCompare()" style="background:var(--g1);color:#000;border:none;padding:8px 20px;font-family:var(--mono);font-size:.55rem;letter-spacing:2px;cursor:pointer;border-radius:2px">▶ COMPARE</button>
+    </div>
+    <div id="cmpResult" style="display:none"></div>
+  </div>
+  <div id="p-heatmap" class="pnl" role="tabpanel">
+    <div id="heatmapContent"></div>
+  </div>
+  <div id="p-scenarios" class="pnl" role="tabpanel">
+    <div id="scenarioContent"></div>
+  </div>
+  <div id="p-warnings" class="pnl" role="tabpanel">
+    <div id="warningsContent"></div>
+  </div>
+  <div id="p-api" class="pnl" role="tabpanel">
+    <div id="apiContent"></div>
+  </div>
+  <div id="p-contagion" class="pnl" role="tabpanel">
+    <div id="contagionContent"></div>
+  </div>
+  <div id="p-dive" class="pnl" role="tabpanel">
+    <div id="diveContent" style="padding:0 4px">
+      <div style="text-align:center;color:var(--t4);padding:40px;font-family:var(--mono);font-size:.55rem;letter-spacing:2px">Click any country card to open Deep Dive analysis</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="f-brand">CAUSENTIA</div>
+  <div class="f-legal">
+    Open-source analytical platform for academic research. Not financial, investment, or policy advice.
+    All data from publicly available sources. Distributed under MIT License.
+  </div>
+  <div class="f-links">
+    <a href="#">PAPER</a><a href="#">GITHUB</a><a href="#">ZENODO</a><a href="#">CODE OCEAN</a><a href="#">CITE</a>
+  </div>
+</footer>
+
+<script>
+// ════════════════════════════════════════════
+// CAUSENTIA v2.1 ENGINE — LIVE DATA
+// ════════════════════════════════════════════
+
+let DATA = [];
+let FI_DATA = {};
+let CEI_DATA = {};
+let MARKET_DATA = {};
+let isLiveData = false;
+
+// Innovation data organized by category (static)
+const INNO_CATS={
+  "Behavioral & Narrative":[
+    {i:"🔇",n:"SilenceGap",d:"Detects invisible stress when governments go quiet on key macro disclosures. Measures delay in expected data publications as a crisis signal.",b:"gp",s:"ChatGPT"},
+    {i:"📡",n:"NarrativeFracture",d:"Measures divergence between domestic-language narrative and international-language narrative. Detects dual-messaging by governments.",b:"gm",s:"Gemini"},
+    {i:"🧩",n:"Cognitive Dissonance Detector",d:"Gap between official government rhetoric and hard economic data. Quantified using Jensen-Shannon Divergence for mathematical rigor.",b:"cl",s:"Claude"},
+  ],
+  "Policy & Institutional":[
+    {i:"🎯",n:"PolicyAmmunition",d:"Counts remaining effective policy tools vs crisis magnitude. Reveals when governments have exhausted options and are reduced to symbolic actions.",b:"ds",s:"DeepSeek"},
+    {i:"🧠",n:"AmnesiaRate",d:"Quantifies institutional memory decay. Measures how fast governments forget past crisis lessons based on official turnover and time since last shock.",b:"gm",s:"Gemini"},
+    {i:"🔗",n:"CoordinationFracture",d:"Measures policy alignment failures between central banks, finance ministries, and regulators. Detects institutional cross-purposes.",b:"ds",s:"DeepSeek"},
+    {i:"👤",n:"Leadership Override Probability",d:"Probability that government leaders will ignore expert economic warnings. Based on leader behavior patterns, institutional independence, and political constraints.",b:"cl",s:"Claude"},
+  ],
+  "Systemic & Velocity":[
+    {i:"🧬",n:"CollapseFingerprint",d:"Dynamic Time Warping algorithm matches a country's current trajectory to historical collapses. Produces a percentage similarity score.",b:"gp",s:"ChatGPT"},
+    {i:"⚡",n:"CrisisVelocity",d:"Measures the speed and acceleration of CI deterioration. Catches crises that escalate from stable to critical faster than level-based indicators.",b:"gp",s:"ChatGPT"},
+    {i:"🔄",n:"Reflexivity Engine",d:"Models how crisis prediction itself accelerates actual crisis. Quantifies the Soros reflexivity concept as a computable feedback amplifier.",b:"cl",s:"Claude"},
+  ],
+  "Market Psychology":[
+    {i:"☢️",n:"ConfidenceHalfLife",d:"Nuclear physics metaphor applied to economic confidence. Measures the decay rate of market confidence after shocks using Kalman filtering.",b:"ds",s:"DeepSeek"},
+    {i:"💫",n:"DelusionGap",d:"Compares market valuations to physical economy indicators (energy consumption, shipping, industrial output). Reveals fantasy pricing in asset markets.",b:"gm",s:"Gemini"},
+  ],
+};
+
+const FX_LABELS = {
+  trade_fragmentation: {n: "Trade Fragmentation", k: "TF"},
+  alliance_cohesion: {n: "Alliance Cohesion Decay", k: "AC"},
+  institutional_stress: {n: "Institutional Stress", k: "IS"},
+  resource_scarcity: {n: "Resource Scarcity Pressure", k: "RS"},
+  strategic_proliferation: {n: "Strategic Proliferation Stress", k: "NP"},
+  domestic_multiplier: {n: "Domestic Multiplier", k: "DM"},
+  escalation_velocity: {n: "Escalation Velocity", k: "EV"},
+};
+
+// Alert messages pool
+const ALERTS=[
+  {t:'<strong>3 countries</strong> crossed the CrisisVelocity threshold in the last 48 hours',s:'critical'},
+  {t:'<strong>NarrativeFracture</strong> score exceeded historical norm in 5 economies',s:'warning'},
+  {t:'<strong>PolicyAmmunition</strong> below 20% for Turkey, Pakistan, and Argentina',s:'critical'},
+  {t:'<strong>SilenceGap</strong> spike detected: Sudan stopped publishing reserve data 14 days ago',s:'critical'},
+  {t:'<strong>AmnesiaRate</strong> alert: 4 countries in danger zone have <strong>zero</strong> officials remaining from last crisis team',s:'warning'},
+  {t:'<strong>CollapseFingerprint</strong> match: Egypt trajectory shows 72% similarity to Sri Lanka 2022 path',s:'critical'},
+  {t:'<strong>Fracture Index</strong> Trade Fragmentation component reached 12-month high',s:'warning'},
+  {t:'<strong>ConfidenceHalfLife</strong> in Nigeria dropped to 2.1 days following central bank announcement',s:'critical'},
+  {t:'<strong>CausalEntropy</strong> rising: Global response latency increased 15% month-over-month',s:'warning'},
+  {t:'<strong>CoordinationFracture</strong> score 0.79 in Pakistan — central bank and finance ministry issuing contradictory signals',s:'critical'},
+];
+
+// ── Utilities ──
+function risk(ci){
+  if(ci>=70)return{l:'cr',k:'CRITICAL',w:'0–6 mo',c:'var(--r0)'};
+  if(ci>=50)return{l:'dg',k:'DANGER',w:'6–12 mo',c:'var(--o0)'};
+  if(ci>=25)return{l:'ct',k:'CAUTION',w:'12–24 mo',c:'var(--y0)'};
+  return{l:'sf',k:'SAFE',w:'24–36 mo',c:'var(--g0)'};
+}
+
+function utcNow(){return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'UTC'})+' UTC';}
+
+// ── Clock ──
+setInterval(()=>{
+  const t=utcNow();
+  document.getElementById('clock').textContent=t;
+  document.getElementById('fiTime').textContent=t;
+  document.getElementById('ceiTime').textContent=t;
+},1000);
+
+// ── Alert rotation ──
+let alertIdx=0;
+function rotateAlert(){
+  const a=ALERTS[alertIdx%ALERTS.length];
+  document.getElementById('alertText').innerHTML=a.t;
+  document.getElementById('alertTs').textContent=utcNow();
+  alertIdx++;
+}
+rotateAlert();
+setInterval(rotateAlert,12000);
+
+// ── Tabs ──
+document.getElementById('tabBar').addEventListener('click',e=>{
+  const t=e.target.closest('.tab');if(!t)return;
+  document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false');});
+  document.querySelectorAll('.pnl').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on');t.setAttribute('aria-selected','true');
+  document.getElementById('p-'+t.dataset.p).classList.add('on');
+  if(t.dataset.p !== 'dive') window.location.hash = '#' + t.dataset.p;
+});
+
+// ── Card HTML ──
+function cardHTML(c, full){
+  const r = risk(c.ci);
+  const inf = c.indicators ? c.indicators.inflation : (c.inf || 0);
+  const debt = c.indicators ? c.indicators.debt_gdp : (c.d || 0);
+  const gdp = c.indicators ? c.indicators.gdp_growth : (c.g || 0);
+  let econ = '';
+  if(full) econ = `<div class="c-econ"><div><div class="c-ev">${inf}%</div><div class="c-el">Inflation</div></div><div><div class="c-ev">${debt}%</div><div class="c-el">Debt/GDP</div></div><div><div class="c-ev">${gdp > 0 ? '+' : ''}${gdp}%</div><div class="c-el">Growth</div></div></div>`;
+  const hdiVal = c.hdi;
+  if(hdiVal) econ += `<div class="c-ind" style="margin-top:2px"><small style="color:${hdiVal>70?'var(--g0)':hdiVal>50?'var(--y0)':'var(--r0)'};font-size:.45rem">HDI: ${hdiVal}</small></div>`;
+  return `<div class="card ${r.l}" tabindex="0" onclick="openDeepDive('${c.code}')" style="cursor:pointer" aria-label="${c.name}: Collapse Index ${c.ci}, ${r.k}"><div class="c-hdr"><div class="c-name">${c.flag} ${c.name}</div><div class="c-ci ${r.l}">${c.ci}</div></div><div class="c-bar"><div class="c-bar-f" style="width:${c.ci}%;background:${r.c}"></div></div><div class="c-meta"><span class="c-risk ${r.l}">${r.k}</span><span class="c-win">${r.w}</span></div>${econ}</div>`;
+}
+
+// ── Renders ──
+function renderOverview(){
+  const sorted = [...DATA].sort((a,b) => b.ci - a.ci).slice(0, 12);
+  document.getElementById('gOverview').innerHTML = sorted.map(c => cardHTML(c, true)).join('');
+}
+
+function renderCountries(){
+  const sorted = [...DATA].sort((a,b) => b.ci - a.ci);
+  document.getElementById('gCountries').innerHTML = sorted.map(c => cardHTML(c, true)).join('');
+}
+
+function renderFracture(){
+  if(!FI_DATA.components) return;
+  const comps = FI_DATA.components;
+  let html = '';
+  for(const [key, comp] of Object.entries(comps)){
+    const label = FX_LABELS[key] || {n: key, k: key.toUpperCase()};
+    const v = comp.value;
+    const p = (v * 100) | 0;
+    const cl = v > 0.65 ? 'var(--r0)' : v > 0.45 ? 'var(--y0)' : 'var(--g0)';
+    const wt = comp.weight ? `${(comp.weight * 100) | 0}%` : (comp.type || '').toUpperCase();
+    html += `<div class="fx"><div class="fx-hdr"><span class="fx-name">${label.k} — ${label.n}</span><span class="fx-wt">${wt}</span></div><div class="fx-val" style="color:${cl}">${v.toFixed(3)}</div><div class="fx-bar"><div class="fx-bar-f" style="width:${p}%;background:${cl}"></div></div></div>`;
+  }
+  // Add market data
+  if(FI_DATA.market_data){
+    const m = FI_DATA.market_data;
+    html += `<div class="fx"><div class="fx-hdr"><span class="fx-name">MARKET — Live Global Indicators</span><span class="fx-wt">FRED</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-top:8px">`;
+    if(m.vix) html += `<div style="text-align:center"><div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:${m.vix>25?'var(--r0)':m.vix>18?'var(--y0)':'var(--g0)'}">${m.vix}</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px">VIX</div></div>`;
+    if(m.oil_wti) html += `<div style="text-align:center"><div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--t1)">$${m.oil_wti}</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px">OIL WTI</div></div>`;
+    if(m.gold) html += `<div style="text-align:center"><div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--y0)">$${m.gold}</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px">GOLD</div></div>`;
+    if(m.dxy) html += `<div style="text-align:center"><div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--t1)">${m.dxy}</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px">DXY</div></div>`;
+    if(m.embi_spread) html += `<div style="text-align:center"><div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:${m.embi_spread>400?'var(--r0)':'var(--t1)'}">${m.embi_spread}</div><div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px">EMBI</div></div>`;
+    html += `</div></div>`;
+  }
+  document.getElementById('gFracture').innerHTML = html;
+}
+
+function renderInnovations(){
+  const container = document.getElementById('gInno');
+  let html = '';
+  for(const [cat, items] of Object.entries(INNO_CATS)){
+    html += `<div class="inno-section"><div class="inno-cat">${cat}</div><div class="inno-grid">`;
+    html += items.map(a => `<div class="inno" tabindex="0"><div class="inno-badge ${a.b}">${a.s}</div><div class="inno-ico" aria-hidden="true">${a.i}</div><div class="inno-name">${a.n}</div><div class="inno-desc">${a.d}</div></div>`).join('');
+    html += `</div></div>`;
+  }
+  container.innerHTML = html;
+}
+
+function renderTicker(){
+  const s = [...DATA].sort((a,b) => b.ci - a.ci);
+  const risk = (ci) => {
+    if(ci >= 70) return { color: '#ff1744', arrow: '▲', shadow: '0 0 8px rgba(255,23,68,0.5)', critical: true };
+    if(ci >= 50) return { color: '#ff9100', arrow: '▲', shadow: '', critical: false };
+    if(ci >= 25) return { color: '#ffd600', arrow: '▲', shadow: '', critical: false };
+    if(ci >= 15) return { color: 'inherit', arrow: '→', shadow: '', critical: false };
+    return { color: '#00e676', arrow: '▼', shadow: '', critical: false };
+  };
+  const h = s.map(c => {
+    const r = risk(c.ci);
+    const scoreStyle = r.shadow ? `color:${r.color};text-shadow:${r.shadow}` : `color:${r.color}`;
+    const scoreClass = r.critical ? 'tk-critical' : '';
+    return `<span class="tk">${c.flag} <span style="color:inherit">${c.code}</span> <span class="${scoreClass}" style="${scoreStyle}">${c.ci.toFixed(1)} ${r.arrow}</span></span>`;
+  }).join('');
+  document.getElementById('ticker').innerHTML = h + h;
+}
+
+function fillMcSel(){
+  const s = [...DATA].sort((a,b) => b.ci - a.ci);
+  document.getElementById('mcSel').innerHTML = '<option value="">Select country…</option>' + s.map(c => `<option value="${c.code}">${c.flag} ${c.name} (${c.ci})</option>`).join('');
+}
+
+function fillCmpSel(){
+  const s = [...DATA].sort((a,b) => b.ci - a.ci);
+  const opts = '<option value="">Select…</option>' + s.map(c => `<option value="${c.code}">${c.flag} ${c.name} (${c.ci})</option>`).join('');
+  document.getElementById('cmp1').innerHTML = opts;
+  document.getElementById('cmp2').innerHTML = opts;
+  document.getElementById('cmp3').innerHTML = '<option value="">Optional…</option>' + s.map(c => `<option value="${c.code}">${c.flag} ${c.name} (${c.ci})</option>`).join('');
+  document.getElementById('cmp4').innerHTML = '<option value="">Optional…</option>' + s.map(c => `<option value="${c.code}">${c.flag} ${c.name} (${c.ci})</option>`).join('');
+}
+
+function renderHeatmap(){
+  const container = document.getElementById('heatmapContent');
+  if(!DATA || DATA.length === 0){ container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t4)">No data</div>'; return; }
+
+  const mode = window._heatmapMode || 'ci';
+  const regions = {};
+  DATA.forEach(c => {
+    const reg = c.region || 'Other';
+    if(!regions[reg]) regions[reg] = [];
+    regions[reg].push(c);
+  });
+
+  Object.values(regions).forEach(arr => arr.sort((a,b) => mode === 'hdi' ? (a.hdi||0) - (b.hdi||0) : b.ci - a.ci));
+
+  const regionMeta = {
+    'MENA': {name:'Middle East & North Africa', icon:'🌍'},
+    'SSA': {name:'Sub-Saharan Africa', icon:'🌍'},
+    'ECA': {name:'Europe & Central Asia', icon:'🌎'},
+    'SA': {name:'South Asia', icon:'🌏'},
+    'EAP': {name:'East Asia & Pacific', icon:'🌏'},
+    'LAC': {name:'Latin America & Caribbean', icon:'🌎'},
+    'NAM': {name:'North America', icon:'🌎'},
+    'Other': {name:'Other', icon:'🌐'},
+  };
+
+  const regionOrder = Object.entries(regions)
+    .map(([k,v]) => ({
+      key: k,
+      avg: mode === 'hdi' ? v.reduce((s,c)=>s+(c.hdi||0),0)/v.length : v.reduce((s,c)=>s+c.ci,0)/v.length,
+      countries: v
+    }))
+    .sort((a,b) => mode === 'hdi' ? a.avg - b.avg : b.avg - a.avg);
+
+  let html = '';
+
+  html += `<div style="display:flex;gap:8px;margin-bottom:16px">
+    <button onclick="window._heatmapMode='ci';renderHeatmap()" style="background:${mode==='ci'?'var(--g1)':'var(--t6)'};color:${mode==='ci'?'#000':'var(--t3)'};border:none;padding:6px 16px;font-family:var(--mono);font-size:.45rem;letter-spacing:1px;cursor:pointer;border-radius:2px">COLLAPSE INDEX</button>
+    <button onclick="window._heatmapMode='hdi';renderHeatmap()" style="background:${mode==='hdi'?'var(--g1)':'var(--t6)'};color:${mode==='hdi'?'#000':'var(--t3)'};border:none;padding:6px 16px;font-family:var(--mono);font-size:.45rem;letter-spacing:1px;cursor:pointer;border-radius:2px">HUMAN DEVELOPMENT</button>
+  </div>`;
+
+  html += `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--t7);border:1px solid var(--t6);border-radius:4px">`;
+  regionOrder.forEach(r => {
+    const meta = regionMeta[r.key] || {name:r.key, icon:'🌐'};
+    const avgColor = mode === 'hdi' ? (r.avg > 70 ? 'var(--g0)' : r.avg > 50 ? 'var(--y0)' : 'var(--r0)') : (r.avg > 50 ? 'var(--r0)' : r.avg > 25 ? 'var(--y0)' : 'var(--g0)');
+    html += `<div style="flex:1;min-width:140px;text-align:center;padding:8px">
+      <div style="font-size:1.2rem">${meta.icon}</div>
+      <div style="font-family:var(--mono);font-size:.45rem;color:var(--t3);letter-spacing:1px;margin:4px 0">${meta.name}</div>
+      <div style="font-family:var(--mono);font-size:1.4rem;font-weight:700;color:${avgColor}">${r.avg.toFixed(1)}</div>
+      <div style="font-family:var(--mono);font-size:.35rem;color:var(--t4)">${r.countries.length} countries</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">GLOBAL RISK HEATMAP — ${DATA.length} COUNTRIES</div>`;
+
+  regionOrder.forEach(reg => {
+    const meta = regionMeta[reg.key] || {name:reg.key, icon:'🌐'};
+    const regAvgColor = mode === 'hdi' ? (reg.avg > 70 ? 'var(--g0)' : reg.avg > 50 ? 'var(--y0)' : 'var(--r0)') : (reg.avg > 50 ? 'var(--r0)' : reg.avg > 25 ? 'var(--y0)' : 'var(--g0)');
+
+    html += `<div style="margin-bottom:20px">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:.9rem">${meta.icon}</span>
+      <span style="font-family:var(--mono);font-size:.5rem;color:var(--t2);letter-spacing:1px">${meta.name}</span>
+      <span style="font-family:var(--mono);font-size:.5rem;color:${regAvgColor};font-weight:700">AVG: ${reg.avg.toFixed(1)}</span>
+      <span style="font-family:var(--mono);font-size:.35rem;color:var(--t4)">(${reg.countries.length})</span>
+    </div>`;
+
+    html += `<div style="display:flex;flex-wrap:wrap;gap:4px">`;
+    reg.countries.forEach(c => {
+      const displayVal = mode === 'hdi' ? (c.hdi || 0) : c.ci;
+      const displayColor = mode === 'hdi' ? (c.hdi > 70 ? 'var(--g0)' : c.hdi > 50 ? 'var(--y0)' : 'var(--r0)') : risk(c.ci).c;
+      const r = risk(c.ci);
+      const intensity = mode === 'hdi' ? Math.min(1, (c.hdi || 0) / 100) : Math.min(1, c.ci / 100);
+      let bg;
+      if(mode === 'hdi'){
+        if((c.hdi||0) < 50) bg = `rgba(244,67,54,${0.3 + (1-intensity) * 0.7})`;
+        else if((c.hdi||0) < 70) bg = `rgba(255,193,7,${0.15 + intensity * 0.5})`;
+        else bg = `rgba(76,175,80,${0.1 + intensity * 0.4})`;
+      } else {
+        if(c.ci >= 70) bg = `rgba(244,67,54,${0.3 + intensity * 0.7})`;
+        else if(c.ci >= 50) bg = `rgba(244,67,54,${0.15 + intensity * 0.5})`;
+        else if(c.ci >= 25) bg = `rgba(255,193,7,${0.15 + intensity * 0.5})`;
+        else bg = `rgba(76,175,80,${0.1 + intensity * 0.4})`;
+      }
+
+      const size = Math.max(60, Math.min(100, 50 + (mode === 'hdi' ? (c.hdi||0) : c.ci) * 0.5));
+      const label = mode === 'hdi' ? (c.hdi != null ? (c.hdi > 70 ? 'High' : c.hdi > 50 ? 'Med' : 'Low') : '') : r.k;
+
+      html += `<div onclick="openDeepDive('${c.code}')" style="
+        background:${bg};
+        border:1px solid ${displayColor}44;
+        border-radius:4px;
+        padding:6px 8px;
+        min-width:${size}px;
+        text-align:center;
+        cursor:pointer;
+        transition:transform .15s,border-color .15s;
+      " onmouseover="this.style.transform='scale(1.08)';this.style.borderColor='${displayColor}'" onmouseout="this.style.transform='scale(1)';this.style.borderColor='${displayColor}44'">
+        <div style="font-size:.85rem">${c.flag}</div>
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${c.name}</div>
+        <div style="font-family:var(--mono);font-size:.75rem;font-weight:700;color:${displayColor}">${displayVal}</div>
+        <div style="font-family:var(--mono);font-size:.3rem;color:${displayColor};letter-spacing:1px">${label}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `<div style="margin-top:24px;padding:16px;background:var(--t7);border:1px solid var(--t6);border-radius:4px">`;
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">RISK DISTRIBUTION</div>`;
+
+  const buckets = [
+    {label:'SAFE',min:0,max:25,color:'var(--g0)'},
+    {label:'CAUTION',min:25,max:50,color:'var(--y0)'},
+    {label:'DANGER',min:50,max:70,color:'#ff9800'},
+    {label:'CRITICAL',min:70,max:85,color:'var(--r0)'},
+    {label:'COLLAPSE',min:85,max:101,color:'#ff1744'},
+  ];
+
+  const maxBucket = Math.max(...buckets.map(b => DATA.filter(c => c.ci >= b.min && c.ci < b.max).length));
+
+  html += `<div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding:0 20px">`;
+  buckets.forEach(b => {
+    const count = DATA.filter(c => c.ci >= b.min && c.ci < b.max).length;
+    const pct = maxBucket > 0 ? (count / maxBucket * 100) : 0;
+    html += `<div style="flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+      <div style="font-family:var(--mono);font-size:.7rem;font-weight:700;color:${b.color};margin-bottom:4px">${count}</div>
+      <div style="width:80%;height:${pct}%;background:${b.color};border-radius:3px 3px 0 0;min-height:2px;transition:height .5s"></div>
+      <div style="font-family:var(--mono);font-size:.35rem;color:${b.color};letter-spacing:1px;margin-top:4px">${b.label}</div>
+      <div style="font-family:var(--mono);font-size:.3rem;color:var(--t4)">${b.min}-${b.max === 101 ? 100 : b.max}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  html += `<div style="margin-top:24px;padding:16px;background:var(--t7);border:1px solid var(--t6);border-radius:4px">`;
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--r0);letter-spacing:2px;margin-bottom:12px">⚠ TOP 10 HIGHEST RISK</div>`;
+  const top10 = [...DATA].sort((a,b) => b.ci - a.ci).slice(0,10);
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">`;
+  top10.forEach((c,i) => {
+    const r = risk(c.ci);
+    html += `<div onclick="openDeepDive('${c.code}')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${c.ci>=70?'rgba(244,67,54,0.1)':c.ci>=50?'rgba(255,152,0,0.1)':'rgba(255,193,7,0.1)'};border:1px solid ${r.c}33;border-radius:4px;cursor:pointer" onmouseover="this.style.borderColor='${r.c}'" onmouseout="this.style.borderColor='${r.c}33'">
+      <span style="font-family:var(--mono);font-size:.7rem;color:var(--t4);min-width:16px">#${i+1}</span>
+      <span style="font-size:1rem">${c.flag}</span>
+      <div style="flex:1">
+        <div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${c.name}</div>
+        <div style="font-family:var(--mono);font-size:.35rem;color:${r.c};letter-spacing:1px">${r.k}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:${r.c}">${c.ci}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  html += `<div style="margin-top:16px;padding:16px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;margin-bottom:24px">`;
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g0);letter-spacing:2px;margin-bottom:12px">✓ TOP 10 MOST STABLE</div>`;
+  const bottom10 = [...DATA].sort((a,b) => a.ci - b.ci).slice(0,10);
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">`;
+  bottom10.forEach((c,i) => {
+    const r = risk(c.ci);
+    html += `<div onclick="openDeepDive('${c.code}')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(76,175,80,0.05);border:1px solid var(--g0)33;border-radius:4px;cursor:pointer" onmouseover="this.style.borderColor='var(--g0)'" onmouseout="this.style.borderColor='var(--g0)33'">
+      <span style="font-family:var(--mono);font-size:.7rem;color:var(--t4);min-width:16px">#${i+1}</span>
+      <span style="font-size:1rem">${c.flag}</span>
+      <div style="flex:1">
+        <div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${c.name}</div>
+        <div style="font-family:var(--mono);font-size:.35rem;color:${r.c};letter-spacing:1px">${r.k}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:${r.c}">${c.ci}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  container.innerHTML = html;
+}
+
+function renderScenarios(){
+  const container = document.getElementById('scenarioContent');
+  if(!DATA || DATA.length === 0) return;
+
+  const scenarios = [
+    {id:'oil_spike', name:'Oil Price Spike +50%', icon:'🛢️', desc:'Simulates crude oil rising 50% from current levels. Impacts energy importers through inflation and current account deterioration.',
+      effects: {inflation: 8, current_account: -3, gdp_growth: -1.5, reserves_months: -0.5},
+      winners: ['SA','AE','QA','NO','RU','DZ','AO','NG','EC','CO'],
+      losers_boost: {inflation: 12, current_account: -5}
+    },
+    {id:'fed_hike', name:'Fed Rate Hike +200bp', icon:'🏦', desc:'Federal Reserve raises rates by 200 basis points. Triggers capital outflows from emerging markets, strengthens USD, increases debt servicing costs.',
+      effects: {debt_gdp: 5, external_debt: 8, gdp_growth: -1, reserves_months: -1},
+      em_multiplier: 1.8
+    },
+    {id:'china_crash', name:'China GDP Crash to -2%', icon:'🇨🇳', desc:'China experiences hard landing. Commodity prices collapse, global trade contracts, Asian supply chains disrupted.',
+      effects: {gdp_growth: -2, inflation: -3, current_account: -2},
+      commodity_exporters: ['BR','AR','CL','PE','AU','ZA','ZM','AO','NG','GH'],
+      commodity_effect: {gdp_growth: -4, current_account: -6}
+    },
+    {id:'gulf_war', name:'Gulf Conflict Escalation', icon:'⚔️', desc:'Major military conflict in Persian Gulf. Oil supply disruption, shipping route closures, regional instability spreads.',
+      effects: {inflation: 15, gdp_growth: -3, reserves_months: -2},
+      direct_hit: ['SA','AE','QA','IQ','IR','YE','JO','LB','SY'],
+      direct_effect: {inflation: 30, gdp_growth: -8, reserves_months: -4}
+    },
+    {id:'debt_crisis', name:'EM Debt Crisis Contagion', icon:'💥', desc:'Sovereign debt crisis spreads across emerging markets. Bond yields spike, currencies collapse, IMF interventions required.',
+      effects: {debt_gdp: 10, inflation: 8, gdp_growth: -2, reserves_months: -1.5},
+      vulnerable: null
+    },
+    {id:'pandemic', name:'New Pandemic Wave', icon:'🦠', desc:'Novel pathogen triggers global health emergency. Lockdowns, supply chain disruptions, tourism collapse.',
+      effects: {gdp_growth: -4, unemployment: 5, inflation: 3, current_account: -2},
+      tourism_dependent: ['TH','MY','EG','MA','TN','JO','GR','PT','ES','KE','TZ','HT','CU','KH','LK']
+    },
+  ];
+
+  let html = '';
+
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:4px">SCENARIO BUILDER — WHAT IF ANALYSIS</div>`;
+  html += `<div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);margin-bottom:20px">Select a scenario to simulate its impact on all ${DATA.length} countries. CI recalculated in real-time.</div>`;
+
+  // Custom Scenario Builder with Sliders
+  html += `<div style="background:var(--t7);border:1px solid var(--g1)44;border-radius:6px;padding:20px;margin-bottom:24px">`;
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div>
+      <div style="font-family:var(--mono);font-size:.5rem;color:var(--g1);letter-spacing:2px;font-weight:700">CUSTOM SCENARIO BUILDER</div>
+      <div style="font-family:var(--mono);font-size:.38rem;color:var(--t4);margin-top:4px">Adjust global economic variables and see real-time impact on all countries</div>
+    </div>
+    <button onclick="runCustomScenario()" style="background:var(--g1);color:#000;border:none;padding:8px 20px;font-family:var(--mono);font-size:.45rem;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px">SIMULATE</button>
+  </div>`;
+
+  const sliders = [
+    {id:'sl_inflation', label:'Inflation Shock', unit:'%', min:-10, max:30, step:1, def:0, icon:'📈', desc:'Global inflation change'},
+    {id:'sl_gdp', label:'GDP Growth Shock', unit:'%', min:-8, max:5, step:0.5, def:0, icon:'📊', desc:'Global GDP growth change'},
+    {id:'sl_oil', label:'Oil Price Change', unit:'%', min:-50, max:100, step:5, def:0, icon:'🛢️', desc:'Crude oil price change (affects inflation & current account)'},
+    {id:'sl_rates', label:'Interest Rate Change', unit:'bp', min:-200, max:400, step:25, def:0, icon:'🏦', desc:'US Fed rate change in basis points (affects EM debt & reserves)'},
+    {id:'sl_debt', label:'Debt/GDP Shock', unit:'%', min:-5, max:20, step:1, def:0, icon:'💰', desc:'Government debt ratio change'},
+    {id:'sl_reserves', label:'Reserves Change', unit:'mo', min:-3, max:3, step:0.5, def:0, icon:'🏧', desc:'Foreign reserves change in months of imports'},
+    {id:'sl_ca', label:'Current Account Shock', unit:'%GDP', min:-8, max:5, step:0.5, def:0, icon:'🔄', desc:'Current account balance change'},
+    {id:'sl_unemp', label:'Unemployment Shock', unit:'%', min:-3, max:10, step:0.5, def:0, icon:'👥', desc:'Unemployment rate change'},
+  ];
+
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px">`;
+
+  sliders.forEach(s => {
+    html += `<div style="background:#0a0a0a;border:1px solid var(--t6);border-radius:4px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-family:var(--mono);font-size:.42rem;color:var(--t3)">${s.icon} ${s.label}</span>
+        <span id="${s.id}_val" style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:var(--t1);min-width:60px;text-align:right">${s.def}${s.unit}</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:.32rem;color:var(--t5);margin-bottom:8px">${s.desc}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:var(--mono);font-size:.35rem;color:var(--t5)">${s.min}</span>
+        <input type="range" id="${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.def}"
+          oninput="updateSliderVal('${s.id}','${s.unit}')"
+          style="flex:1;accent-color:var(--g1);height:4px;cursor:pointer">
+        <span style="font-family:var(--mono);font-size:.35rem;color:var(--t5)">${s.max}</span>
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+
+  html += `<div style="text-align:center;margin-top:12px">
+    <button onclick="resetSliders()" style="background:none;border:1px solid var(--t5);color:var(--t4);padding:4px 16px;font-family:var(--mono);font-size:.4rem;cursor:pointer;border-radius:2px;letter-spacing:1px">RESET ALL</button>
+  </div>`;
+
+  html += `</div>`;
+
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--t4);letter-spacing:2px;margin-bottom:12px">— OR SELECT A PRESET SCENARIO —</div>`;
+
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:24px">`;
+  scenarios.forEach(s => {
+    html += `<div id="sc-${s.id}" onclick="runScenario('${s.id}')" style="background:var(--t7);border:2px solid var(--t6);border-radius:6px;padding:16px;cursor:pointer;transition:border-color .2s,transform .15s" onmouseover="this.style.borderColor='var(--g1)';this.style.transform='translateY(-2px)'" onmouseout="if(!this.classList.contains('sc-active')){this.style.borderColor='var(--t6)';this.style.transform='none'}">
+      <div style="font-size:1.5rem;margin-bottom:8px">${s.icon}</div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--t1);font-weight:600;margin-bottom:6px">${s.name}</div>
+      <div style="font-family:var(--mono);font-size:.38rem;color:var(--t4);line-height:1.5">${s.desc}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<div id="scenarioResults" style="display:none"></div>`;
+
+  container.innerHTML = html;
+  window._scenarios = scenarios;
+}
+
+function renderWarnings(){
+  const container = document.getElementById('warningsContent');
+  if(!DATA || DATA.length === 0) return;
+
+  let html = '';
+
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:4px">EARLY WARNING SYSTEM</div>`;
+  html += `<div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);margin-bottom:20px">Real-time risk assessment with projected trajectories for all ${DATA.length} monitored countries</div>`;
+
+  const critical = DATA.filter(c => c.ci >= 70).sort((a,b) => b.ci - a.ci);
+  const danger = DATA.filter(c => c.ci >= 50 && c.ci < 70).sort((a,b) => b.ci - a.ci);
+  const caution = DATA.filter(c => c.ci >= 25 && c.ci < 50).sort((a,b) => b.ci - a.ci);
+  const rising = DATA.filter(c => c.ci >= 15 && c.ci < 25).sort((a,b) => b.ci - a.ci);
+
+  html += `<div style="background:rgba(244,67,54,0.08);border:1px solid rgba(244,67,54,0.3);border-radius:6px;padding:16px;margin-bottom:20px">`;
+  html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <span style="font-size:1.2rem">🚨</span>
+    <span style="font-family:var(--mono);font-size:.5rem;color:var(--r0);letter-spacing:2px;font-weight:700">ACTIVE ALERTS — ${critical.length + danger.length} COUNTRIES</span>
+  </div>`;
+
+  if(critical.length > 0){
+    html += `<div style="font-family:var(--mono);font-size:.42rem;color:var(--r0);letter-spacing:1px;margin-bottom:8px">■ CRITICAL (CI ≥ 70) — Immediate attention required</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin-bottom:12px">`;
+    critical.forEach(c => {
+      const timeLeft = c.ci >= 85 ? 'IMMINENT' : '0-6 months';
+      html += `<div onclick="openDeepDive('${c.code}')" style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(244,67,54,0.15);border:1px solid var(--r0)44;border-radius:4px;cursor:pointer">
+        <div style="font-size:1.5rem">${c.flag}</div>
+        <div style="flex:1">
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--t1);font-weight:700">${c.name}</div>
+          <div style="font-family:var(--mono);font-size:.38rem;color:var(--r0)">Risk Window: ${timeLeft}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:1.3rem;font-weight:800;color:var(--r0)">${c.ci}</div>
+          <div style="font-family:var(--mono);font-size:.35rem;color:var(--r0);letter-spacing:1px">CRITICAL</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(danger.length > 0){
+    html += `<div style="font-family:var(--mono);font-size:.42rem;color:#ff9800;letter-spacing:1px;margin-bottom:8px">■ DANGER (CI 50-70) — Close monitoring needed</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin-bottom:8px">`;
+    danger.forEach(c => {
+      html += `<div onclick="openDeepDive('${c.code}')" style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,152,0,0.1);border:1px solid #ff980044;border-radius:4px;cursor:pointer">
+        <div style="font-size:1.3rem">${c.flag}</div>
+        <div style="flex:1">
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${c.name}</div>
+          <div style="font-family:var(--mono);font-size:.35rem;color:#ff9800">Risk Window: 6-12 months</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:#ff9800">${c.ci}</div>
+          <div style="font-family:var(--mono);font-size:.35rem;color:#ff9800;letter-spacing:1px">DANGER</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(critical.length === 0 && danger.length === 0){
+    html += `<div style="font-family:var(--mono);font-size:.5rem;color:var(--g0);text-align:center;padding:16px">✓ No countries currently in CRITICAL or DANGER zones</div>`;
+  }
+  html += `</div>`;
+
+  if(caution.length > 0){
+    html += `<div style="background:rgba(255,193,7,0.05);border:1px solid rgba(255,193,7,0.2);border-radius:6px;padding:16px;margin-bottom:20px">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:1rem">⚠️</span>
+      <span style="font-family:var(--mono);font-size:.5rem;color:var(--y0);letter-spacing:2px;font-weight:700">WATCHLIST — ${caution.length} COUNTRIES IN CAUTION</span>
+    </div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">`;
+    caution.forEach(c => {
+      const pctToDanger = ((c.ci - 25) / 25 * 100).toFixed(0);
+      html += `<div onclick="openDeepDive('${c.code}')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,193,7,0.08);border:1px solid var(--y0)33;border-radius:4px;cursor:pointer">
+        <span style="font-size:1.1rem">${c.flag}</span>
+        <div style="flex:1">
+          <div style="font-family:var(--mono);font-size:.48rem;color:var(--t1)">${c.name}</div>
+          <div style="background:var(--t6);height:4px;border-radius:2px;margin-top:4px;overflow:hidden"><div style="width:${pctToDanger}%;height:100%;background:var(--y0);border-radius:2px"></div></div>
+          <div style="font-family:var(--mono);font-size:.3rem;color:var(--t4);margin-top:2px">${pctToDanger}% to DANGER threshold</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:.9rem;font-weight:700;color:var(--y0)">${c.ci}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  if(rising.length > 0){
+    html += `<div style="background:rgba(0,255,136,0.03);border:1px solid var(--t6);border-radius:6px;padding:16px;margin-bottom:20px">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:1rem">📡</span>
+      <span style="font-family:var(--mono);font-size:.5rem;color:var(--t3);letter-spacing:2px;font-weight:700">MONITORING — ${rising.length} COUNTRIES WITH ELEVATED RISK (CI 15-25)</span>
+    </div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px">`;
+    rising.forEach(c => {
+      const r = risk(c.ci);
+      html += `<div onclick="openDeepDive('${c.code}')" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;cursor:pointer">
+        <span style="font-size:.9rem">${c.flag}</span>
+        <div style="flex:1;font-family:var(--mono);font-size:.45rem;color:var(--t2)">${c.name}</div>
+        <span style="font-family:var(--mono);font-size:.6rem;font-weight:700;color:${r.c}">${c.ci}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:6px;padding:16px;margin-bottom:20px">`;
+  html += `<div style="font-family:var(--mono);font-size:.5rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">RISK TRAJECTORY MATRIX</div>`;
+  html += `<div style="font-family:var(--mono);font-size:.38rem;color:var(--t4);margin-bottom:16px">Projected risk movement based on current stress, absorption capacity, and economic momentum</div>`;
+
+  const trajectories = DATA.map(c => {
+    const ind = c.indicators || {};
+    let momentum = 0;
+    if((ind.inflation || 0) > 20 && (ind.reserves_months || 3) < 3) momentum += 2;
+    else if((ind.inflation || 0) > 10) momentum += 1;
+    else if((ind.inflation || 0) < 5 && (ind.gdp_growth || 0) > 2) momentum -= 1;
+    if((ind.gdp_growth || 0) < -2) momentum += 2;
+    else if((ind.gdp_growth || 0) < 0) momentum += 1;
+    else if((ind.gdp_growth || 0) > 3) momentum -= 1;
+    if((ind.debt_gdp || 0) > 80 && (ind.current_account || 0) < -5) momentum += 2;
+    else if((ind.debt_gdp || 0) > 60) momentum += 1;
+    if((ind.political_stability || 0) < -1.5) momentum += 1;
+    if((ind.gov_effectiveness || 0) > 0.5) momentum -= 1;
+    if((ind.gdelt_tone || 0) < -5) momentum += 1;
+    let trajectory = 'STABLE';
+    let tColor = 'var(--t3)';
+    let tIcon = '→';
+    if(momentum >= 3) { trajectory = 'DETERIORATING'; tColor = 'var(--r0)'; tIcon = '↗'; }
+    else if(momentum >= 1) { trajectory = 'WEAKENING'; tColor = 'var(--y0)'; tIcon = '↗'; }
+    else if(momentum <= -2) { trajectory = 'IMPROVING'; tColor = 'var(--g0)'; tIcon = '↘'; }
+    else if(momentum <= -1) { trajectory = 'STABILIZING'; tColor = '#4fc3f7'; tIcon = '↘'; }
+    return { ...c, momentum, trajectory, tColor, tIcon };
+  });
+
+  const deteriorating = trajectories.filter(t => t.trajectory === 'DETERIORATING').sort((a,b) => b.ci - a.ci);
+  const weakening = trajectories.filter(t => t.trajectory === 'WEAKENING').sort((a,b) => b.ci - a.ci);
+  const stable = trajectories.filter(t => t.trajectory === 'STABLE').sort((a,b) => b.ci - a.ci);
+  const stabilizing = trajectories.filter(t => t.trajectory === 'STABILIZING').sort((a,b) => b.ci - a.ci);
+  const improving = trajectories.filter(t => t.trajectory === 'IMPROVING').sort((a,b) => b.ci - a.ci);
+
+  html += `<div style="display:flex;gap:4px;margin-bottom:16px;height:30px;border-radius:4px;overflow:hidden">`;
+  const total = DATA.length;
+  if(deteriorating.length) html += `<div style="flex:${deteriorating.length};background:var(--r0);display:flex;align-items:center;justify-content:center"><span style="font-family:var(--mono);font-size:.35rem;color:#fff;font-weight:700">${deteriorating.length} ↗</span></div>`;
+  if(weakening.length) html += `<div style="flex:${weakening.length};background:var(--y0);display:flex;align-items:center;justify-content:center"><span style="font-family:var(--mono);font-size:.35rem;color:#000;font-weight:700">${weakening.length} ↗</span></div>`;
+  if(stable.length) html += `<div style="flex:${stable.length};background:var(--t5);display:flex;align-items:center;justify-content:center"><span style="font-family:var(--mono);font-size:.35rem;color:#fff;font-weight:700">${stable.length} →</span></div>`;
+  if(stabilizing.length) html += `<div style="flex:${stabilizing.length};background:#4fc3f7;display:flex;align-items:center;justify-content:center"><span style="font-family:var(--mono);font-size:.35rem;color:#000;font-weight:700">${stabilizing.length} ↘</span></div>`;
+  if(improving.length) html += `<div style="flex:${improving.length};background:var(--g0);display:flex;align-items:center;justify-content:center"><span style="font-family:var(--mono);font-size:.35rem;color:#000;font-weight:700">${improving.length} ↘</span></div>`;
+  html += `</div>`;
+
+  html += `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;font-family:var(--mono);font-size:.38rem">
+    <span style="color:var(--r0)">■ DETERIORATING (${deteriorating.length})</span>
+    <span style="color:var(--y0)">■ WEAKENING (${weakening.length})</span>
+    <span style="color:var(--t4)">■ STABLE (${stable.length})</span>
+    <span style="color:#4fc3f7">■ STABILIZING (${stabilizing.length})</span>
+    <span style="color:var(--g0)">■ IMPROVING (${improving.length})</span>
+  </div>`;
+
+  if(deteriorating.length > 0){
+    html += `<div style="font-family:var(--mono);font-size:.42rem;color:var(--r0);letter-spacing:1px;margin-bottom:8px">↗ DETERIORATING TRAJECTORY</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px;margin-bottom:16px">`;
+    deteriorating.forEach(t => {
+      const r = risk(t.ci);
+      html += `<div onclick="openDeepDive('${t.code}')" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(244,67,54,0.08);border:1px solid var(--r0)33;border-radius:4px;cursor:pointer">
+        <span style="font-size:1rem">${t.flag}</span>
+        <div style="flex:1">
+          <div style="font-family:var(--mono);font-size:.48rem;color:var(--t1)">${t.name}</div>
+          <div style="font-family:var(--mono);font-size:.35rem;color:${r.c}">${r.k}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:.8rem;font-weight:700;color:${r.c}">${t.ci}</div>
+          <div style="font-family:var(--mono);font-size:.4rem;color:var(--r0)">↗ ${t.trajectory}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(weakening.length > 0){
+    html += `<div style="font-family:var(--mono);font-size:.42rem;color:var(--y0);letter-spacing:1px;margin-bottom:8px">↗ WEAKENING TRAJECTORY</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-bottom:16px">`;
+    weakening.forEach(t => {
+      const r = risk(t.ci);
+      html += `<div onclick="openDeepDive('${t.code}')" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,193,7,0.05);border:1px solid var(--y0)22;border-radius:4px;cursor:pointer">
+        <span style="font-size:.9rem">${t.flag}</span>
+        <div style="flex:1;font-family:var(--mono);font-size:.45rem;color:var(--t2)">${t.name}</div>
+        <span style="font-family:var(--mono);font-size:.65rem;font-weight:700;color:${r.c}">${t.ci}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(improving.length > 0){
+    html += `<div style="font-family:var(--mono);font-size:.42rem;color:var(--g0);letter-spacing:1px;margin-bottom:8px">↘ IMPROVING TRAJECTORY</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-bottom:16px">`;
+    improving.forEach(t => {
+      const r = risk(t.ci);
+      html += `<div onclick="openDeepDive('${t.code}')" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(76,175,80,0.05);border:1px solid var(--g0)22;border-radius:4px;cursor:pointer">
+        <span style="font-size:.9rem">${t.flag}</span>
+        <div style="flex:1;font-family:var(--mono);font-size:.45rem;color:var(--t2)">${t.name}</div>
+        <span style="font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--g0)">${t.ci}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+
+  html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:6px;padding:16px;margin-bottom:20px">`;
+  html += `<div style="font-family:var(--mono);font-size:.5rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">KEY RISK INDICATORS — THRESHOLD BREACHES</div>`;
+
+  const breaches = [];
+  DATA.forEach(c => {
+    const ind = c.indicators || {};
+    const b = [];
+    if((ind.inflation || 0) > 50) b.push({indicator:'Inflation', value: ind.inflation.toFixed(1)+'%', severity:'critical'});
+    else if((ind.inflation || 0) > 20) b.push({indicator:'Inflation', value: ind.inflation.toFixed(1)+'%', severity:'warning'});
+    if((ind.gdp_growth || 0) < -5) b.push({indicator:'GDP Contraction', value: ind.gdp_growth.toFixed(1)+'%', severity:'critical'});
+    else if((ind.gdp_growth || 0) < -2) b.push({indicator:'GDP Contraction', value: ind.gdp_growth.toFixed(1)+'%', severity:'warning'});
+    if((ind.reserves_months || 99) < 1) b.push({indicator:'Reserves Depleted', value: (ind.reserves_months||0).toFixed(1)+' mo', severity:'critical'});
+    else if((ind.reserves_months || 99) < 3) b.push({indicator:'Low Reserves', value: (ind.reserves_months||0).toFixed(1)+' mo', severity:'warning'});
+    if((ind.debt_gdp || 0) > 100) b.push({indicator:'Debt Crisis', value: ind.debt_gdp.toFixed(1)+'%', severity:'critical'});
+    if((ind.political_stability || 0) < -2) b.push({indicator:'Political Crisis', value: ind.political_stability.toFixed(2), severity:'critical'});
+    if(b.length > 0) breaches.push({...c, breaches: b});
+  });
+
+  breaches.sort((a,b) => b.breaches.length - a.breaches.length);
+
+  if(breaches.length > 0){
+    html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.48rem">`;
+    html += `<tr style="border-bottom:1px solid var(--t5)">
+      <th style="text-align:left;padding:8px;color:var(--t4);font-size:.4rem">COUNTRY</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">CI</th>
+      <th style="text-align:left;padding:8px;color:var(--t4);font-size:.4rem">THRESHOLD BREACHES</th>
+    </tr>`;
+    breaches.slice(0, 20).forEach(c => {
+      const r = risk(c.ci);
+      html += `<tr style="border-bottom:1px solid var(--t6);cursor:pointer" onclick="openDeepDive('${c.code}')" onmouseover="this.style.background='var(--t7)'" onmouseout="this.style.background='none'">
+        <td style="padding:6px 8px"><span style="margin-right:4px">${c.flag}</span>${c.name}</td>
+        <td style="text-align:center;padding:6px;color:${r.c};font-weight:700">${c.ci}</td>
+        <td style="padding:6px 8px">${c.breaches.map(b =>
+          `<span style="display:inline-block;margin:2px;padding:2px 6px;border-radius:2px;font-size:.38rem;background:${b.severity==='critical'?'rgba(244,67,54,0.15)':'rgba(255,193,7,0.15)'};color:${b.severity==='critical'?'var(--r0)':'var(--y0)'}">${b.indicator}: ${b.value}</span>`
+        ).join('')}</td>
+      </tr>`;
+    });
+    html += `</table></div>`;
+  }
+  html += `</div>`;
+
+  container.innerHTML = html;
+}
+
+function runScenario(id){
+  const scenario = window._scenarios.find(s => s.id === id);
+  if(!scenario) return;
+
+  document.querySelectorAll('[id^="sc-"]').forEach(el => {
+    el.classList.remove('sc-active');
+    el.style.borderColor = 'var(--t6)';
+    el.style.transform = 'none';
+  });
+  const activeEl = document.getElementById('sc-'+id);
+  activeEl.classList.add('sc-active');
+  activeEl.style.borderColor = 'var(--g1)';
+
+  const resultsDiv = document.getElementById('scenarioResults');
+  resultsDiv.style.display = 'block';
+  resultsDiv.innerHTML = '<div style="text-align:center;padding:40px;font-family:var(--mono);color:var(--g1)">Running scenario simulation...</div>';
+
+  const body = {
+    shocks: scenario.effects,
+    country_overrides: {}
+  };
+
+  if(scenario.winners){
+    scenario.winners.forEach(code => {
+      body.country_overrides[code] = scenario.losers_boost
+        ? Object.fromEntries(Object.entries(scenario.losers_boost).map(([k,v]) => [k, -v]))
+        : {inflation: -5, current_account: 5, gdp_growth: 2};
+    });
+  }
+  if(scenario.direct_hit){
+    scenario.direct_hit.forEach(code => {
+      body.country_overrides[code] = scenario.direct_effect || {};
+    });
+  }
+  if(scenario.commodity_exporters){
+    scenario.commodity_exporters.forEach(code => {
+      body.country_overrides[code] = scenario.commodity_effect || {};
+    });
+  }
+  if(scenario.tourism_dependent){
+    scenario.tourism_dependent.forEach(code => {
+      body.country_overrides[code] = {gdp_growth: -3, unemployment: 4};
+    });
+  }
+
+  fetch('/api/scenario', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.error){ resultsDiv.innerHTML = `<div style="color:var(--r0);padding:20px">${data.error}</div>`; return; }
+
+    const results = data.results;
+    const summary = data.summary;
+
+    let html = '';
+
+    html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-bottom:6px">AVG CI CHANGE</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:${summary.avg_delta>0?'var(--r0)':'var(--g0)'}">${summary.avg_delta>0?'+':''}${summary.avg_delta}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--r0);letter-spacing:1px;margin-bottom:6px">CRITICAL</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--r0)">${summary.old_critical} → ${summary.critical}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:#ff9800;letter-spacing:1px;margin-bottom:6px">DANGER</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:#ff9800">${summary.old_danger} → ${summary.danger}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--r0);letter-spacing:1px;margin-bottom:6px">DOWNGRADES</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--r0)">${summary.downgrades}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--g0);letter-spacing:1px;margin-bottom:6px">BENEFICIARIES</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--g0)">${summary.beneficiaries}</div>
+      </div>
+    </div>`;
+
+    const mostAffected = results.filter(r => r.delta > 0).slice(0, 15);
+    if(mostAffected.length > 0){
+      html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--r0);letter-spacing:2px;margin-bottom:10px">⚠ MOST AFFECTED</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-bottom:20px">`;
+      mostAffected.forEach(r => {
+        const levelChange = r.originalLevel !== r.newLevel;
+        const newR = risk(r.newCI);
+        html += `<div onclick="openDeepDive('${r.code}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(244,67,54,${Math.min(0.3, r.delta/50)});border:1px solid ${newR.c}44;border-radius:4px;cursor:pointer">
+          <span style="font-size:1.1rem">${r.flag}</span>
+          <div style="flex:1">
+            <div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${r.name}</div>
+            <div style="font-family:var(--mono);font-size:.35rem;color:var(--t4)">${r.originalLevel} → <span style="color:${newR.c};font-weight:${levelChange?'700':'400'}">${r.newLevel}</span></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--mono);font-size:.5rem;color:var(--t3)">${r.originalCI} → <span style="color:${newR.c};font-weight:700">${r.newCI}</span></div>
+            <div style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:var(--r0)">+${r.delta.toFixed(1)}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    const beneficiaries = results.filter(r => r.delta < -1).sort((a,b) => a.delta - b.delta).slice(0, 10);
+    if(beneficiaries.length > 0){
+      html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g0);letter-spacing:2px;margin-bottom:10px">✓ POTENTIAL BENEFICIARIES</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-bottom:20px">`;
+      beneficiaries.forEach(r => {
+        const newR = risk(r.newCI);
+        html += `<div onclick="openDeepDive('${r.code}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(76,175,80,0.08);border:1px solid var(--g0)33;border-radius:4px;cursor:pointer">
+          <span style="font-size:1.1rem">${r.flag}</span>
+          <div style="flex:1"><div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${r.name}</div></div>
+          <div style="text-align:right">
+            <div style="font-family:var(--mono);font-size:.5rem;color:var(--t3)">${r.originalCI} → <span style="color:var(--g0);font-weight:700">${r.newCI}</span></div>
+            <div style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:var(--g0)">${r.delta.toFixed(1)}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    const sorted = [...results].sort((a,b) => b.newCI - a.newCI);
+    html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:10px">FULL IMPACT TABLE — ALL ${sorted.length} COUNTRIES</div>`;
+    html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.5rem">`;
+    html += `<tr style="border-bottom:1px solid var(--t5)">
+      <th style="text-align:left;padding:8px;color:var(--t4);font-size:.4rem;letter-spacing:1px">COUNTRY</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">CURRENT CI</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">NEW CI</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">CHANGE</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">STATUS</th>
+    </tr>`;
+    sorted.forEach(r => {
+      const newR = risk(r.newCI);
+      const oldR = risk(r.originalCI);
+      const deltaColor = r.delta > 5 ? 'var(--r0)' : r.delta > 0 ? 'var(--y0)' : r.delta < -2 ? 'var(--g0)' : 'var(--t3)';
+      const levelChange = r.originalLevel !== r.newLevel;
+      html += `<tr style="border-bottom:1px solid var(--t6);cursor:pointer" onclick="openDeepDive('${r.code}')" onmouseover="this.style.background='var(--t7)'" onmouseout="this.style.background='none'">
+        <td style="padding:6px 8px"><span style="margin-right:6px">${r.flag}</span>${r.name}</td>
+        <td style="text-align:center;padding:6px;color:${oldR.c}">${r.originalCI}</td>
+        <td style="text-align:center;padding:6px;color:${newR.c};font-weight:700">${r.newCI}</td>
+        <td style="text-align:center;padding:6px;color:${deltaColor};font-weight:700">${r.delta>0?'+':''}${r.delta}</td>
+        <td style="text-align:center;padding:6px"><span style="color:${newR.c};font-size:.4rem;letter-spacing:1px;${levelChange?'font-weight:700;text-decoration:underline':''}">${r.newLevel}</span></td>
+      </tr>`;
+    });
+    html += `</table></div>`;
+
+    resultsDiv.innerHTML = html;
+    resultsDiv.scrollIntoView({behavior:'smooth',block:'start'});
+  })
+  .catch(err => {
+    resultsDiv.innerHTML = `<div style="color:var(--r0);padding:20px;font-family:var(--mono)">Error: ${err.message}</div>`;
+  });
+}
+
+function updateCounters(){
+  const cnt = {cr: 0, dg: 0, ct: 0, sf: 0};
+  DATA.forEach(c => { cnt[risk(c.ci).l]++; });
+  document.getElementById('nCr').textContent = cnt.cr;
+  document.getElementById('nDg').textContent = cnt.dg;
+  document.getElementById('nCt').textContent = cnt.ct;
+  document.getElementById('nSf').textContent = cnt.sf;
+
+  if(FI_DATA.score !== undefined){
+    document.getElementById('fiVal').textContent = FI_DATA.score;
+    document.getElementById('nFi').textContent = Math.round(FI_DATA.score);
+    const fiStatus = document.querySelector('.idx.fi-b .idx-status');
+    if(fiStatus) fiStatus.textContent = FI_DATA.status || 'STRESSED';
+  }
+  if(CEI_DATA.score !== undefined){
+    document.getElementById('ceiVal').textContent = CEI_DATA.score;
+    document.getElementById('nCei').textContent = Math.round(CEI_DATA.score);
+    const ceiStatus = document.querySelector('.idx.cei-b .idx-status');
+    if(ceiStatus) ceiStatus.textContent = CEI_DATA.status || 'FLUX';
+  }
+}
+
+// ── Monte Carlo (API-powered) ──
+async function runMC(){
+  const code = document.getElementById('mcSel').value;
+  if(!code) return;
+
+  document.getElementById('mcRes').style.display = 'grid';
+  document.getElementById('mcRes').innerHTML = '<div class="mc-s" style="grid-column:1/-1"><div class="mc-sv" style="font-size:.8rem">Running 10,000 scenarios...</div></div>';
+
+  try {
+    const resp = await fetch(`/api/montecarlo/${code}?scenarios=10000`);
+    const mc = await resp.json();
+    const r = mc.results;
+
+    document.getElementById('mcRes').innerHTML = `
+      <div class="mc-s"><div class="mc-sv">${r.mean}</div><div class="mc-sl">Mean CI</div></div>
+      <div class="mc-s"><div class="mc-sv" style="color:var(--g0)">${r.p5_best}</div><div class="mc-sl">Best Case (5th)</div></div>
+      <div class="mc-s"><div class="mc-sv" style="color:var(--r0)">${r.p95_worst}</div><div class="mc-sl">Worst Case (95th)</div></div>
+      <div class="mc-s"><div class="mc-sv" style="color:${r.p_crisis > 50 ? 'var(--r0)' : 'var(--y0)'}">${r.p_crisis}%</div><div class="mc-sl">P(Crisis)</div></div>`;
+
+    const bins = mc.distribution;
+    const mx = Math.max(...bins);
+    document.getElementById('mcHist').innerHTML = bins.map((v, i) => `<div class="hist-bar ${i >= 35 ? 'dz' : ''}" style="height:${(v / mx * 100) | 0}%;background:var(--g0)" title="CI ${i * 2}–${i * 2 + 2}: ${v} scenarios"></div>`).join('');
+  } catch(e) {
+    document.getElementById('mcRes').innerHTML = `<div class="mc-s" style="grid-column:1/-1"><div class="mc-sv" style="color:var(--r0);font-size:.7rem">Error: ${e.message}</div></div>`;
+  }
+}
+
+function runCompare(){
+  const codes = [
+    document.getElementById('cmp1').value,
+    document.getElementById('cmp2').value,
+    document.getElementById('cmp3').value,
+    document.getElementById('cmp4').value,
+  ].filter(Boolean);
+
+  if(codes.length < 2){
+    alert('Select at least 2 countries');
+    return;
+  }
+
+  const selected = codes.map(code => DATA.find(c => c.code === code)).filter(Boolean);
+  const container = document.getElementById('cmpResult');
+  container.style.display = 'block';
+
+  const indicators = [
+    {key: 'inflation', label: 'Inflation %', warn: 20, crit: 50},
+    {key: 'gdp_growth', label: 'GDP Growth %', warn: -1, crit: -3, invert: true},
+    {key: 'debt_gdp', label: 'Debt/GDP %', warn: 60, crit: 100},
+    {key: 'unemployment', label: 'Unemployment %', warn: 10, crit: 20},
+    {key: 'reserves_months', label: 'Reserves (months)', warn: 3, crit: 1.5, invert: true},
+    {key: 'current_account', label: 'Current Account %', warn: -3, crit: -8, invert: true},
+    {key: 'external_debt', label: 'External Debt % GNI', warn: 60, crit: 150},
+    {key: 'gov_effectiveness', label: 'Gov Effectiveness', warn: -0.5, crit: -1.5, invert: true, isWgi: true},
+    {key: 'rule_of_law', label: 'Rule of Law', warn: -0.5, crit: -1.5, invert: true, isWgi: true},
+    {key: 'political_stability', label: 'Political Stability', warn: -0.5, crit: -1.5, invert: true, isWgi: true},
+    {key: 'gdelt_tone', label: 'News Sentiment', warn: -3, crit: -6, invert: true},
+  ];
+
+  function valColor(val, ind){
+    if(val === null || val === undefined || val === 0) return 'var(--t4)';
+    if(ind.invert){
+      if(ind.isWgi){
+        if(val < ind.crit) return 'var(--r0)';
+        if(val < ind.warn) return 'var(--y0)';
+        return 'var(--g0)';
+      }
+      if(val < ind.crit) return 'var(--r0)';
+      if(val < ind.warn) return 'var(--y0)';
+      return 'var(--g0)';
+    }
+    if(val > ind.crit) return 'var(--r0)';
+    if(val > ind.warn) return 'var(--y0)';
+    return 'var(--g0)';
+  }
+
+  let html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.65rem">';
+
+  html += '<tr style="border-bottom:1px solid var(--t5)">';
+  html += '<th style="text-align:left;padding:10px 8px;color:var(--t4);letter-spacing:1px;font-size:.45rem">INDICATOR</th>';
+  selected.forEach(c => {
+    const r = risk(c.ci);
+    html += `<th style="text-align:center;padding:10px 8px;min-width:120px"><div style="font-size:.8rem">${c.flag}</div><div style="color:var(--t1);font-size:.55rem">${c.name}</div><div style="color:${r.c};font-size:1.1rem;font-weight:700;margin-top:4px">${c.ci}</div><div style="color:${r.c};font-size:.4rem;letter-spacing:1px">${r.k}</div></th>`;
+  });
+  html += '</tr>';
+
+  html += '<tr style="border-bottom:1px solid var(--t6)"><td style="padding:8px;color:var(--g1);letter-spacing:1px;font-size:.45rem">COLLAPSE INDEX</td>';
+  selected.forEach(c => {
+    const r = risk(c.ci);
+    html += `<td style="padding:8px;text-align:center"><div style="background:var(--t6);height:8px;border-radius:4px;overflow:hidden;margin:0 10px"><div style="width:${c.ci}%;height:100%;background:${r.c};border-radius:4px"></div></div></td>`;
+  });
+  html += '</tr>';
+
+  indicators.forEach(ind => {
+    html += `<tr style="border-bottom:1px solid var(--t6)"><td style="padding:8px;color:var(--t3);font-size:.5rem">${ind.label}</td>`;
+    selected.forEach(c => {
+      const val = c.indicators ? (c.indicators[ind.key] || 0) : 0;
+      const color = valColor(val, ind);
+      const display = ind.isWgi ? val.toFixed(2) : (typeof val === 'number' ? val.toFixed(1) : val);
+      html += `<td style="padding:8px;text-align:center;color:${color};font-weight:600;font-size:.7rem">${display}${ind.key.includes('growth') || ind.key.includes('inflation') || ind.key.includes('debt') || ind.key.includes('unemployment') || ind.key.includes('current') || ind.key.includes('external') ? '%' : ''}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '<tr style="border-top:2px solid var(--g1)"><td style="padding:8px;color:var(--g1);letter-spacing:1px;font-size:.45rem">RISK WINDOW</td>';
+  selected.forEach(c => {
+    const r = risk(c.ci);
+    html += `<td style="padding:8px;text-align:center;color:${r.c};font-size:.55rem;letter-spacing:1px">${r.w}</td>`;
+  });
+  html += '</tr>';
+
+  html += '</table></div>';
+
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px">';
+  selected.forEach(c => {
+    const r = risk(c.ci);
+    const inf = c.indicators?.inflation || 0;
+    const gdp = c.indicators?.gdp_growth || 0;
+    const debt = c.indicators?.debt_gdp || 0;
+    html += `<div style="border:1px solid ${r.c}33;border-radius:4px;padding:16px;text-align:center">
+      <div style="font-size:1.2rem;margin-bottom:4px">${c.flag}</div>
+      <div style="color:var(--t1);font-size:.65rem;font-weight:600">${c.name}</div>
+      <div style="color:${r.c};font-size:1.8rem;font-weight:700;margin:8px 0">${c.ci}</div>
+      <div style="color:${r.c};font-size:.45rem;letter-spacing:2px;margin-bottom:12px">${r.k} — ${r.w}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:.5rem">
+        <div><div style="color:${inf>50?'var(--r0)':inf>20?'var(--y0)':'var(--g0)'};font-size:.75rem;font-weight:700">${inf.toFixed(1)}%</div><div style="color:var(--t4)">Inflation</div></div>
+        <div><div style="color:${debt>100?'var(--r0)':debt>60?'var(--y0)':'var(--g0)'};font-size:.75rem;font-weight:700">${debt.toFixed(1)}%</div><div style="color:var(--t4)">Debt/GDP</div></div>
+        <div><div style="color:${gdp<-3?'var(--r0)':gdp<0?'var(--y0)':'var(--g0)'};font-size:.75rem;font-weight:700">${gdp>0?'+':''}${gdp.toFixed(1)}%</div><div style="color:var(--t4)">Growth</div></div>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function renderAPI(){
+  const container = document.getElementById('apiContent');
+  const baseUrl = window.location.origin;
+
+  const endpoints = [
+    {method:'GET', path:'/api/health', desc:'System health check and country count', example:'{"status":"ok","countries":80}', auth:false},
+    {method:'GET', path:'/api/data', desc:'Full dashboard data for all countries with CI, indicators, fracture index, and causal entropy', example:'{"countries":{...},"counts":{"critical":1,...},"fracture_index":{"score":29.6},...}', auth:false},
+    {method:'GET', path:'/api/country/{code}', desc:'Detailed country analysis including CI decomposition, 25+ indicators, HDI, history, and GDELT sentiment', params:[{name:'code',type:'path',desc:'ISO2 country code (e.g. TR, EG, SD)'}], example:'{"code":"TR","ci":18.2,"stress":25.75,"absorption":1.124,...}', auth:false},
+    {method:'GET', path:'/api/montecarlo/{code}', desc:'Monte Carlo simulation with 10,000 scenarios for crisis probability estimation', params:[{name:'code',type:'path',desc:'ISO2 country code'}], example:'{"country":"TR","simulations":10000,"mean_ci":18.5,"p_crisis":0.02,...}', auth:false},
+    {method:'POST', path:'/api/scenario', desc:'Run custom "what-if" scenario simulations across all countries', body:'{"shocks":{"inflation":8,"gdp_growth":-2},"country_overrides":{"SA":{"inflation":-3}}}', example:'{"results":[...],"summary":{"avg_delta":5.1,...}}', auth:false},
+    {method:'POST', path:'/api/chat', desc:'AI-powered analysis using live country data (Claude + GPT backend)', body:'{"question":"Why is Sudan CI so high?","country":"SD","mode":"auto"}', example:'{"answer":"...","model":"Claude Sonnet","provider":"anthropic"}', auth:true},
+  ];
+
+  let html = '';
+
+  html += `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
+    <div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--g1);letter-spacing:3px;font-weight:700">CAUSENTIA API</div>
+      <div style="font-family:var(--mono);font-size:.42rem;color:var(--t4);margin-top:4px">RESTful API for sovereign risk intelligence • Real-time data • 80 countries • 25+ indicators</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:var(--mono);font-size:.38rem;color:var(--t4)">Base URL</div>
+      <div style="font-family:var(--mono);font-size:.5rem;color:var(--g1)">${baseUrl}/api</div>
+      <div style="font-family:var(--mono);font-size:.35rem;color:var(--t5);margin-top:4px">Version 2.1 • MIT License</div>
+    </div>
+  </div>`;
+
+  html += `<div style="background:var(--t7);border:1px solid var(--g1)33;border-radius:6px;padding:16px;margin-bottom:24px">`;
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">QUICK START</div>`;
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">`;
+
+  html += `<div>
+    <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);margin-bottom:6px">cURL</div>
+    <div style="background:#0a0a0a;border:1px solid var(--t6);border-radius:4px;padding:10px;position:relative">
+      <code style="font-family:var(--mono);font-size:.42rem;color:var(--g0);line-height:1.8;white-space:pre-wrap">curl ${baseUrl}/api/country/TR</code>
+      <button onclick="navigator.clipboard.writeText('curl ${baseUrl.replace(/'/g, "\\'")}/api/country/TR');this.textContent='✓';setTimeout(()=>this.textContent='📋',1500)" style="position:absolute;top:6px;right:6px;background:none;border:1px solid var(--t5);color:var(--t4);padding:1px 4px;font-size:.5rem;cursor:pointer;border-radius:2px">📋</button>
+    </div>
+  </div>`;
+
+  html += `<div>
+    <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);margin-bottom:6px">Python</div>
+    <div style="background:#0a0a0a;border:1px solid var(--t6);border-radius:4px;padding:10px;position:relative">
+      <code style="font-family:var(--mono);font-size:.42rem;color:var(--g0);line-height:1.8;white-space:pre-wrap">import requests\nr = requests.get("${baseUrl}/api/data")\nprint(r.json()["countries"]["TR"]["ci"])</code>
+      <button onclick="navigator.clipboard.writeText('import requests\\nr = requests.get(\"${baseUrl}/api/data\")\\nprint(r.json()[\\\"countries\\\"][\\\"TR\\\"][\\\"ci\\\"])');this.textContent='✓';setTimeout(()=>this.textContent='📋',1500)" style="position:absolute;top:6px;right:6px;background:none;border:1px solid var(--t5);color:var(--t4);padding:1px 4px;font-size:.5rem;cursor:pointer;border-radius:2px">📋</button>
+    </div>
+  </div>`;
+
+  html += `<div>
+    <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);margin-bottom:6px">JavaScript</div>
+    <div style="background:#0a0a0a;border:1px solid var(--t6);border-radius:4px;padding:10px;position:relative">
+      <code style="font-family:var(--mono);font-size:.42rem;color:var(--g0);line-height:1.8;white-space:pre-wrap">const r = await fetch("${baseUrl}/api/country/EG")\nconst d = await r.json()\nconsole.log(d.ci, d.level)</code>
+      <button onclick="navigator.clipboard.writeText('const r = await fetch(\\'${baseUrl.replace(/'/g, "\\'")}/api/country/EG\\')\\nconst d = await r.json()\\nconsole.log(d.ci, d.level)');this.textContent='✓';setTimeout(()=>this.textContent='📋',1500)" style="position:absolute;top:6px;right:6px;background:none;border:1px solid var(--t5);color:var(--t4);padding:1px 4px;font-size:.5rem;cursor:pointer;border-radius:2px">📋</button>
+    </div>
+  </div>`;
+
+  html += `<div>
+    <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);margin-bottom:6px">Scenario (POST)</div>
+    <div style="background:#0a0a0a;border:1px solid var(--t6);border-radius:4px;padding:10px;position:relative">
+      <code style="font-family:var(--mono);font-size:.42rem;color:var(--g0);line-height:1.8;white-space:pre-wrap">curl -X POST ${baseUrl}/api/scenario \\\n  -H "Content-Type: application/json" \\\n  -d '{"shocks":{"inflation":10}}'</code>
+      <button onclick="navigator.clipboard.writeText('curl -X POST ${baseUrl.replace(/'/g, "\\'")}/api/scenario -H \"Content-Type: application/json\" -d \\'{\"shocks\":{\"inflation\":10}}\\' ');this.textContent='✓';setTimeout(()=>this.textContent='📋',1500)" style="position:absolute;top:6px;right:6px;background:none;border:1px solid var(--t5);color:var(--t4);padding:1px 4px;font-size:.5rem;cursor:pointer;border-radius:2px">📋</button>
+    </div>
+  </div>`;
+
+  html += `</div></div>`;
+
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:16px">ENDPOINTS</div>`;
+
+  endpoints.forEach((ep, i) => {
+    const methodColor = ep.method === 'GET' ? 'var(--g0)' : '#ff9800';
+    const methodBg = ep.method === 'GET' ? 'rgba(76,175,80,0.15)' : 'rgba(255,152,0,0.15)';
+
+    html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:6px;margin-bottom:12px;overflow:hidden">`;
+
+    html += `<div onclick="document.getElementById('ep-${i}').style.display=document.getElementById('ep-${i}').style.display==='none'?'block':'none'" style="display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer" onmouseover="this.style.background='#0a0a0a'" onmouseout="this.style.background='none'">
+      <span style="background:${methodBg};color:${methodColor};padding:2px 8px;border-radius:2px;font-family:var(--mono);font-size:.42rem;font-weight:700;min-width:40px;text-align:center">${ep.method}</span>
+      <span style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${ep.path}</span>
+      ${ep.auth ? '<span style="background:rgba(244,67,54,0.15);color:var(--r0);padding:1px 6px;border-radius:2px;font-family:var(--mono);font-size:.3rem">AUTH</span>' : ''}
+      <span style="flex:1;font-family:var(--mono);font-size:.4rem;color:var(--t4);text-align:right">${ep.desc}</span>
+      <span style="color:var(--t4);font-size:.7rem">▾</span>
+    </div>`;
+
+    html += `<div id="ep-${i}" style="display:none;padding:0 16px 16px;border-top:1px solid var(--t6)">`;
+
+    if(ep.params){
+      html += `<div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin:12px 0 6px">PARAMETERS</div>`;
+      ep.params.forEach(p => {
+        html += `<div style="display:flex;gap:8px;padding:4px 0;font-family:var(--mono);font-size:.42rem">
+          <span style="color:var(--g0);min-width:60px">${p.name}</span>
+          <span style="color:var(--t5);min-width:40px">${p.type}</span>
+          <span style="color:var(--t3)">${p.desc}</span>
+        </div>`;
+      });
+    }
+
+    if(ep.body){
+      html += `<div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin:12px 0 6px">REQUEST BODY</div>`;
+      html += `<div style="background:#0a0a0a;border:1px solid var(--t6);border-radius:4px;padding:8px;position:relative">
+        <code style="font-family:var(--mono);font-size:.4rem;color:var(--g0);white-space:pre-wrap">${ep.body.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code>
+      </div>`;
+    }
+
+    html += `<div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin:12px 0 6px">RESPONSE</div>`;
+    html += `<div style="background:#0a0a0a;border:1px solid var(--t6);border-radius:4px;padding:8px;position:relative">
+      <code style="font-family:var(--mono);font-size:.4rem;color:var(--g0);white-space:pre-wrap">${ep.example.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code>
+    </div>`;
+
+    if(ep.method === 'GET'){
+      const tryPath = ep.path.replace('{code}', 'TR');
+      html += `<div style="margin-top:12px">
+        <button onclick="tryEndpoint('${baseUrl.replace(/'/g, "\\'")}${tryPath}')" style="background:var(--g1);color:#000;border:none;padding:6px 16px;font-family:var(--mono);font-size:.4rem;font-weight:700;cursor:pointer;border-radius:2px;letter-spacing:1px">▶ TRY IT</button>
+        <span id="try-${i}" style="font-family:var(--mono);font-size:.38rem;color:var(--t4);margin-left:8px"></span>
+      </div>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:6px;padding:16px;margin-bottom:20px">`;
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">DATA SOURCES & METHODOLOGY</div>`;
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">`;
+
+  const sources = [
+    {name:'World Bank Open Data', indicators:'25 indicators', update:'6-hour cache', url:'data.worldbank.org', icon:'🏦'},
+    {name:'FRED (Federal Reserve)', indicators:'5 market series (VIX, Oil, Gold, DXY, EMBI)', update:'6-hour cache', url:'fred.stlouisfed.org', icon:'📊'},
+    {name:'GDELT Project', indicators:'News sentiment & volume for 20+ countries', update:'6-hour cache', url:'gdeltproject.org', icon:'📰'},
+  ];
+
+  sources.forEach(s => {
+    html += `<div style="background:#0a0a0a;border:1px solid var(--t6);border-radius:4px;padding:12px">
+      <div style="font-size:1rem;margin-bottom:4px">${s.icon}</div>
+      <div style="font-family:var(--mono);font-size:.48rem;color:var(--t1);font-weight:600">${s.name}</div>
+      <div style="font-family:var(--mono);font-size:.38rem;color:var(--t4);margin-top:4px">${s.indicators}</div>
+      <div style="font-family:var(--mono);font-size:.35rem;color:var(--t5);margin-top:2px">Update: ${s.update}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:6px;padding:16px;margin-bottom:20px">`;
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">USAGE & LIMITS</div>`;
+  html += `<div style="font-family:var(--mono);font-size:.42rem;color:var(--t3);line-height:2">
+    • <span style="color:var(--g0)">Free & Open</span> — No API key required for data endpoints<br>
+    • <span style="color:var(--y0)">Rate Limit</span> — 60 requests/minute per IP<br>
+    • <span style="color:var(--t1)">Cache</span> — Data refreshes every 6 hours from World Bank/FRED/GDELT<br>
+    • <span style="color:var(--t1)">Format</span> — All responses in JSON<br>
+    • <span style="color:var(--t1)">CORS</span> — Enabled for all origins<br>
+    • <span style="color:var(--r0)">AI Chat</span> — /api/chat requires server-side API keys (not publicly accessible)
+  </div></div>`;
+
+  html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:6px;padding:16px;margin-bottom:20px">`;
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">COUNTRY CODES (ISO 3166-1 ALPHA-2)</div>`;
+  html += `<div style="display:flex;flex-wrap:wrap;gap:4px">`;
+  if(DATA && DATA.length > 0){
+    DATA.slice().sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+      html += `<span style="background:#0a0a0a;border:1px solid var(--t6);padding:3px 8px;border-radius:2px;font-family:var(--mono);font-size:.38rem;color:var(--t3);cursor:pointer" onclick="tryEndpoint('${baseUrl.replace(/'/g, "\\'")}/api/country/${c.code}')" title="${c.name.replace(/"/g, '&quot;')}">${c.flag} ${c.code}</span>`;
+    });
+  }
+  html += `</div></div>`;
+
+  container.innerHTML = html;
+}
+
+function tryEndpoint(url){
+  window.open(url, '_blank');
+}
+
+function renderContagion(){
+  const container = document.getElementById('contagionContent');
+  if(!DATA || DATA.length === 0) return;
+
+  const links = [
+    {from:'TR',to:'EG',weight:3,type:'trade'},{from:'TR',to:'IQ',weight:3,type:'trade'},{from:'TR',to:'SA',weight:2,type:'trade'},
+    {from:'TR',to:'AE',weight:2,type:'trade'},{from:'TR',to:'IR',weight:2,type:'trade'},{from:'TR',to:'SY',weight:3,type:'geo'},
+    {from:'TR',to:'JO',weight:1,type:'trade'},{from:'EG',to:'SA',weight:2,type:'trade'},{from:'EG',to:'LB',weight:2,type:'trade'},
+    {from:'EG',to:'JO',weight:2,type:'geo'},{from:'SA',to:'AE',weight:3,type:'trade'},{from:'SA',to:'QA',weight:2,type:'trade'},
+    {from:'SA',to:'YE',weight:2,type:'geo'},{from:'LB',to:'SY',weight:3,type:'geo'},{from:'IQ',to:'IR',weight:3,type:'trade'},
+    {from:'IQ',to:'SY',weight:2,type:'geo'},{from:'JO',to:'SA',weight:1,type:'trade'},{from:'JO',to:'IQ',weight:2,type:'geo'},
+    {from:'NG',to:'GH',weight:2,type:'trade'},{from:'NG',to:'CM',weight:2,type:'geo'},{from:'ET',to:'KE',weight:2,type:'trade'},
+    {from:'ET',to:'SD',weight:3,type:'geo'},{from:'ZA',to:'MZ',weight:2,type:'trade'},{from:'ZA',to:'ZW',weight:3,type:'trade'},
+    {from:'ZA',to:'ZM',weight:2,type:'trade'},{from:'ZA',to:'AO',weight:1,type:'trade'},{from:'KE',to:'TZ',weight:2,type:'trade'},
+    {from:'KE',to:'UG',weight:2,type:'trade'},{from:'SD',to:'EG',weight:2,type:'geo'},{from:'SD',to:'ET',weight:2,type:'geo'},
+    {from:'SN',to:'GH',weight:1,type:'trade'},{from:'CD',to:'AO',weight:2,type:'geo'},{from:'CD',to:'ZM',weight:1,type:'geo'},
+    {from:'US',to:'MX',weight:3,type:'trade'},{from:'US',to:'BR',weight:2,type:'trade'},{from:'US',to:'CA',weight:3,type:'trade'},
+    {from:'US',to:'CO',weight:2,type:'trade'},{from:'BR',to:'AR',weight:3,type:'trade'},{from:'AR',to:'CL',weight:2,type:'trade'},
+    {from:'AR',to:'BO',weight:2,type:'trade'},{from:'CO',to:'EC',weight:2,type:'trade'},{from:'CO',to:'VE',weight:2,type:'trade'},
+    {from:'MX',to:'GT',weight:2,type:'trade'},{from:'MX',to:'HN',weight:1,type:'trade'},{from:'PE',to:'CL',weight:2,type:'trade'},
+    {from:'PE',to:'EC',weight:2,type:'trade'},{from:'PE',to:'BO',weight:2,type:'trade'},{from:'CU',to:'VE',weight:2,type:'trade'},
+    {from:'HT',to:'CU',weight:1,type:'geo'},
+    {from:'GB',to:'DE',weight:3,type:'trade'},{from:'GB',to:'FR',weight:3,type:'trade'},{from:'DE',to:'PL',weight:3,type:'trade'},
+    {from:'DE',to:'TR',weight:3,type:'trade'},{from:'DE',to:'IT',weight:2,type:'trade'},{from:'FR',to:'DZ',weight:2,type:'trade'},
+    {from:'FR',to:'MA',weight:2,type:'trade'},{from:'FR',to:'TN',weight:2,type:'trade'},{from:'IT',to:'LY',weight:2,type:'trade'},
+    {from:'GR',to:'TR',weight:2,type:'geo'},{from:'RO',to:'HU',weight:2,type:'trade'},{from:'PL',to:'UA',weight:2,type:'trade'},
+    {from:'UA',to:'RU',weight:3,type:'trade'},{from:'NO',to:'SE',weight:2,type:'trade'},{from:'ES',to:'PT',weight:2,type:'trade'},
+    {from:'ES',to:'MA',weight:2,type:'trade'},
+    {from:'CN',to:'JP',weight:3,type:'trade'},{from:'CN',to:'KR',weight:3,type:'trade'},{from:'CN',to:'VN',weight:2,type:'trade'},
+    {from:'CN',to:'MM',weight:2,type:'trade'},{from:'CN',to:'PK',weight:2,type:'trade'},{from:'CN',to:'AU',weight:3,type:'trade'},
+    {from:'JP',to:'KR',weight:2,type:'trade'},{from:'IN',to:'PK',weight:2,type:'geo'},{from:'IN',to:'BD',weight:3,type:'trade'},
+    {from:'IN',to:'LK',weight:2,type:'trade'},{from:'IN',to:'NP',weight:2,type:'trade'},{from:'TH',to:'MM',weight:2,type:'trade'},
+    {from:'TH',to:'KH',weight:2,type:'trade'},{from:'TH',to:'MY',weight:2,type:'trade'},{from:'MY',to:'ID',weight:2,type:'trade'},
+    {from:'ID',to:'PH',weight:2,type:'trade'},{from:'ID',to:'AU',weight:2,type:'trade'},
+    {from:'RU',to:'TR',weight:2,type:'trade'},{from:'RU',to:'CN',weight:3,type:'trade'},{from:'RU',to:'IN',weight:2,type:'trade'},
+    {from:'SA',to:'CN',weight:3,type:'trade'},{from:'SA',to:'IN',weight:2,type:'trade'},{from:'AE',to:'IN',weight:2,type:'trade'},
+    {from:'US',to:'CN',weight:3,type:'trade'},{from:'US',to:'JP',weight:3,type:'trade'},{from:'US',to:'IN',weight:2,type:'trade'},
+    {from:'US',to:'GB',weight:3,type:'trade'},{from:'US',to:'DE',weight:3,type:'trade'},{from:'US',to:'KR',weight:2,type:'trade'},
+  ];
+
+  const regionPositions = {
+    'MENA': {cx: 520, cy: 280, r: 140},
+    'SSA': {cx: 480, cy: 520, r: 150},
+    'LATAM': {cx: 180, cy: 420, r: 130},
+    'LAC': {cx: 180, cy: 420, r: 130},
+    'Europe': {cx: 440, cy: 120, r: 130},
+    'ECA': {cx: 440, cy: 120, r: 130},
+    'Asia': {cx: 820, cy: 280, r: 160},
+    'EAP': {cx: 820, cy: 280, r: 160},
+    'SA': {cx: 780, cy: 380, r: 100},
+    'NA': {cx: 150, cy: 150, r: 80},
+    'NAM': {cx: 150, cy: 150, r: 80},
+  };
+
+  const countryMap = {};
+  DATA.forEach(c => countryMap[c.code] = c);
+
+  const regionGroups = {};
+  DATA.forEach(c => {
+    const region = c.region || 'Other';
+    if(!regionGroups[region]) regionGroups[region] = [];
+    regionGroups[region].push(c);
+  });
+
+  const positions = {};
+  Object.entries(regionGroups).forEach(([region, countries]) => {
+    const rp = regionPositions[region] || {cx: 500, cy: 400, r: 100};
+    countries.forEach((c, i) => {
+      const angle = (2 * Math.PI * i / countries.length) - Math.PI/2;
+      const jitter = (i % 3) * 8;
+      positions[c.code] = {
+        x: rp.cx + (rp.r + jitter) * Math.cos(angle),
+        y: rp.cy + (rp.r + jitter) * Math.sin(angle),
+      };
+    });
+  });
+
+  let html = '';
+
+  html += `<div style="font-family:var(--mono);font-size:.55rem;color:var(--g1);letter-spacing:3px;font-weight:700;margin-bottom:4px">CONTAGION NETWORK</div>`;
+  html += `<div style="font-family:var(--mono);font-size:.42rem;color:var(--t4);margin-bottom:16px">Crisis transmission pathways via trade links and geographic proximity • Node size = CI • Link thickness = trade volume</div>`;
+
+  html += `<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button onclick="filterContagion('all')" id="cf-all" style="background:var(--g1);color:#000;border:none;padding:4px 12px;font-family:var(--mono);font-size:.4rem;font-weight:700;cursor:pointer;border-radius:2px;letter-spacing:1px">ALL</button>
+    <button onclick="filterContagion('critical')" id="cf-critical" style="background:var(--t7);color:var(--r0);border:1px solid var(--r0)44;padding:4px 12px;font-family:var(--mono);font-size:.4rem;cursor:pointer;border-radius:2px">CRITICAL & DANGER</button>
+    <button onclick="filterContagion('mena')" id="cf-mena" style="background:var(--t7);color:var(--t3);border:1px solid var(--t6);padding:4px 12px;font-family:var(--mono);font-size:.4rem;cursor:pointer;border-radius:2px">MENA</button>
+    <button onclick="filterContagion('africa')" id="cf-africa" style="background:var(--t7);color:var(--t3);border:1px solid var(--t6);padding:4px 12px;font-family:var(--mono);font-size:.4rem;cursor:pointer;border-radius:2px">AFRICA</button>
+    <button onclick="filterContagion('europe')" id="cf-europe" style="background:var(--t7);color:var(--t3);border:1px solid var(--t6);padding:4px 12px;font-family:var(--mono);font-size:.4rem;cursor:pointer;border-radius:2px">EUROPE</button>
+    <button onclick="filterContagion('asia')" id="cf-asia" style="background:var(--t7);color:var(--t3);border:1px solid var(--t6);padding:4px 12px;font-family:var(--mono);font-size:.4rem;cursor:pointer;border-radius:2px">ASIA</button>
+    <button onclick="filterContagion('americas')" id="cf-americas" style="background:var(--t7);color:var(--t3);border:1px solid var(--t6);padding:4px 12px;font-family:var(--mono);font-size:.4rem;cursor:pointer;border-radius:2px">AMERICAS</button>
+  </div>`;
+
+  const svgW = 1000, svgH = 700;
+  html += `<div style="background:#050505;border:1px solid var(--t6);border-radius:6px;overflow:hidden;position:relative">`;
+  html += `<svg id="contagionSvg" viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:auto">`;
+
+  Object.entries(regionPositions).forEach(([region, rp]) => {
+    html += `<text x="${rp.cx}" y="${rp.cy - rp.r - 10}" text-anchor="middle" fill="#333" font-family="monospace" font-size="10" letter-spacing="2">${region}</text>`;
+  });
+
+  links.forEach((link) => {
+    const from = positions[link.from];
+    const to = positions[link.to];
+    if(!from || !to) return;
+    const fromC = countryMap[link.from];
+    const toC = countryMap[link.to];
+    if(!fromC || !toC) return;
+    const maxCI = Math.max(fromC.ci || 0, toC.ci || 0);
+    let strokeColor = 'rgba(0,255,136,0.08)';
+    if(maxCI >= 70) strokeColor = 'rgba(244,67,54,0.4)';
+    else if(maxCI >= 50) strokeColor = 'rgba(255,152,0,0.3)';
+    else if(maxCI >= 25) strokeColor = 'rgba(255,193,7,0.15)';
+    const strokeWidth = link.weight * 0.8;
+    const dashStyle = link.type === 'geo' ? 'stroke-dasharray="4,4"' : '';
+    html += `<line class="c-link" data-from="${link.from}" data-to="${link.to}" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="${strokeColor}" stroke-width="${strokeWidth}" ${dashStyle}/>`;
+  });
+
+  DATA.forEach(c => {
+    const pos = positions[c.code];
+    if(!pos) return;
+    const r = risk(c.ci);
+    const nodeR = Math.max(6, Math.min(20, c.ci / 4));
+    const opacity = Math.max(0.4, Math.min(1, c.ci / 50));
+    html += `<g class="c-node" data-code="${c.code}" data-region="${c.region}" style="cursor:pointer" onclick="openDeepDive('${c.code}')">`;
+    if(c.ci >= 50){
+      html += `<circle cx="${pos.x}" cy="${pos.y}" r="${nodeR + 6}" fill="none" stroke="${r.c}" stroke-width="1" opacity="0.3">
+        <animate attributeName="r" values="${nodeR+4};${nodeR+10};${nodeR+4}" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/>
+      </circle>`;
+    }
+    html += `<circle cx="${pos.x}" cy="${pos.y}" r="${nodeR}" fill="${r.c}" opacity="${opacity}" stroke="#000" stroke-width="0.5"/>`;
+    html += `<text x="${pos.x}" y="${pos.y + nodeR + 10}" text-anchor="middle" fill="${r.c}" font-family="monospace" font-size="7" font-weight="600">${c.code}</text>`;
+    if(c.ci >= 25){
+      html += `<text x="${pos.x}" y="${pos.y + 3}" text-anchor="middle" fill="#fff" font-family="monospace" font-size="6" font-weight="700">${c.ci}</text>`;
+    }
+    html += `</g>`;
+  });
+
+  html += `</svg>`;
+  html += `</div>`;
+
+  html += `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-family:var(--mono);font-size:.38rem">
+    <span style="color:var(--r0)">● CRITICAL (CI≥70)</span>
+    <span style="color:#ff9800">● DANGER (50-70)</span>
+    <span style="color:var(--y0)">● CAUTION (25-50)</span>
+    <span style="color:var(--g0)">● SAFE (<25)</span>
+    <span style="color:var(--t4)">— Trade Link</span>
+    <span style="color:var(--t4)">--- Geographic Link</span>
+    <span style="color:var(--t4)">Node size = CI score</span>
+  </div>`;
+
+  html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:6px;padding:16px;margin-top:20px">`;
+  html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">CONTAGION RISK ANALYSIS</div>`;
+
+  const exposure = {};
+  DATA.forEach(c => { exposure[c.code] = {neighbors: 0, totalRisk: 0, maxNeighborCI: 0, criticalNeighbors: 0, links: []}; });
+
+  links.forEach(link => {
+    const fromC = countryMap[link.from];
+    const toC = countryMap[link.to];
+    if(!fromC || !toC) return;
+    if(exposure[link.from]){
+      exposure[link.from].neighbors++;
+      exposure[link.from].totalRisk += toC.ci * link.weight;
+      exposure[link.from].maxNeighborCI = Math.max(exposure[link.from].maxNeighborCI, toC.ci);
+      if(toC.ci >= 50) exposure[link.from].criticalNeighbors++;
+      exposure[link.from].links.push({code: link.to, ci: toC.ci, weight: link.weight});
+    }
+    if(exposure[link.to]){
+      exposure[link.to].neighbors++;
+      exposure[link.to].totalRisk += fromC.ci * link.weight;
+      exposure[link.to].maxNeighborCI = Math.max(exposure[link.to].maxNeighborCI, fromC.ci);
+      if(fromC.ci >= 50) exposure[link.to].criticalNeighbors++;
+      exposure[link.to].links.push({code: link.from, ci: fromC.ci, weight: link.weight});
+    }
+  });
+
+  const exposureList = Object.entries(exposure)
+    .map(([code, exp]) => ({code, ...exp, country: countryMap[code]}))
+    .filter(e => e.country && e.neighbors > 0)
+    .sort((a,b) => b.totalRisk - a.totalRisk);
+
+  html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.48rem">`;
+  html += `<tr style="border-bottom:1px solid var(--t5)">
+    <th style="text-align:left;padding:8px;color:var(--t4);font-size:.4rem">COUNTRY</th>
+    <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">OWN CI</th>
+    <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">CONNECTIONS</th>
+    <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">EXPOSURE SCORE</th>
+    <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">MAX NEIGHBOR CI</th>
+    <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">CRITICAL NEIGHBORS</th>
+    <th style="text-align:left;padding:8px;color:var(--t4);font-size:.4rem">LINKED TO</th>
+  </tr>`;
+
+  exposureList.slice(0, 25).forEach(e => {
+    const c = e.country;
+    const r = risk(c.ci);
+    const expColor = e.totalRisk > 200 ? 'var(--r0)' : e.totalRisk > 100 ? 'var(--y0)' : 'var(--t3)';
+    const linkedHtml = e.links.slice().sort((a,b)=>b.ci-a.ci).slice(0,5).map(l => {
+      const lr = risk(l.ci);
+      return `<span style="color:${lr.c};font-size:.38rem">${l.code}:${l.ci}</span>`;
+    }).join(' ');
+    html += `<tr style="border-bottom:1px solid var(--t6);cursor:pointer" onclick="openDeepDive('${c.code}')" onmouseover="this.style.background='var(--t7)'" onmouseout="this.style.background='none'">
+      <td style="padding:6px 8px"><span style="margin-right:4px">${c.flag}</span>${c.name}</td>
+      <td style="text-align:center;padding:6px;color:${r.c};font-weight:700">${c.ci}</td>
+      <td style="text-align:center;padding:6px;color:var(--t3)">${e.neighbors}</td>
+      <td style="text-align:center;padding:6px;color:${expColor};font-weight:700">${e.totalRisk.toFixed(0)}</td>
+      <td style="text-align:center;padding:6px;color:${risk(e.maxNeighborCI).c}">${e.maxNeighborCI}</td>
+      <td style="text-align:center;padding:6px;color:${e.criticalNeighbors > 0 ? 'var(--r0)' : 'var(--t3)'}">${e.criticalNeighbors}</td>
+      <td style="padding:6px 8px">${linkedHtml}</td>
+    </tr>`;
+  });
+  html += `</table></div></div>`;
+
+  container.innerHTML = html;
+}
+
+function filterContagion(filter){
+  document.querySelectorAll('[id^="cf-"]').forEach(b => {
+    b.style.background = 'var(--t7)';
+    b.style.color = 'var(--t3)';
+  });
+  const activeBtn = document.getElementById('cf-' + filter);
+  if(activeBtn){ activeBtn.style.background = 'var(--g1)'; activeBtn.style.color = '#000'; }
+
+  const nodes = document.querySelectorAll('.c-node');
+  const linkEls = document.querySelectorAll('.c-link');
+
+  const regionMap = {
+    'mena': 'MENA',
+    'africa': 'SSA',
+    'europe': ['Europe','ECA'],
+    'asia': ['Asia','EAP','SA'],
+    'americas': ['LATAM','NA','LAC','NAM'],
+  };
+
+  nodes.forEach(n => n.style.opacity = '1');
+  linkEls.forEach(l => l.style.opacity = '1');
+
+  if(filter === 'all') return;
+
+  const visibleCodes = new Set();
+
+  if(filter === 'critical'){
+    DATA.forEach(c => { if(c.ci >= 50) visibleCodes.add(c.code); });
+    const expanded = new Set(visibleCodes);
+    document.querySelectorAll('.c-link').forEach(l => {
+      if(visibleCodes.has(l.dataset.from)) expanded.add(l.dataset.to);
+      if(visibleCodes.has(l.dataset.to)) expanded.add(l.dataset.from);
+    });
+    expanded.forEach(c => visibleCodes.add(c));
+  } else {
+    const targetRegions = regionMap[filter];
+    const regions = Array.isArray(targetRegions) ? targetRegions : [targetRegions];
+    DATA.forEach(c => { if(regions.includes(c.region)) visibleCodes.add(c.code); });
+  }
+
+  nodes.forEach(n => {
+    if(!visibleCodes.has(n.dataset.code)) n.style.opacity = '0.05';
+  });
+  linkEls.forEach(l => {
+    if(!visibleCodes.has(l.dataset.from) || !visibleCodes.has(l.dataset.to)) l.style.opacity = '0.02';
+  });
+}
+
+async function openDeepDive(code){
+  window.location.hash = '#country/' + code;
+  const tabDive = document.getElementById('tabDive');
+  tabDive.style.display = '';
+  tabDive.textContent = 'DEEP DIVE';
+
+  document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false');});
+  document.querySelectorAll('.pnl').forEach(x=>x.classList.remove('on'));
+  tabDive.classList.add('on');
+  tabDive.setAttribute('aria-selected','true');
+  document.getElementById('p-dive').classList.add('on');
+
+  const container = document.getElementById('diveContent');
+  container.innerHTML = '<div style="text-align:center;padding:60px;font-family:var(--mono);color:var(--g1)">Loading country data...</div>';
+
+  try {
+    const resp = await fetch(`/api/country/${code}`);
+    const d = await resp.json();
+    const r = risk(d.ci);
+
+    tabDive.textContent = `${d.flag} ${d.name}`;
+
+    const peers = DATA.filter(c => c.region === d.region && c.code !== code).slice(0,5);
+    const regionAvgCI = DATA.filter(c => c.region === d.region).reduce((s,c) => s + c.ci, 0) / Math.max(1, DATA.filter(c => c.region === d.region).length);
+    const globalAvgCI = DATA.reduce((s,c) => s + c.ci, 0) / DATA.length;
+
+    let html = '';
+
+    html += `<div style="display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--t6)">
+      <div>
+        <div style="font-size:2rem;margin-bottom:4px">${d.flag} <span style="font-family:var(--mono);color:var(--t1);letter-spacing:2px">${d.name}</span></div>
+        <div style="font-family:var(--mono);font-size:.45rem;color:var(--t4);letter-spacing:2px">ISO: ${d.code}/${d.iso3} &bull; Region: ${d.region} &bull; Updated: ${new Date(d.updated).toLocaleString('en-GB',{timeZone:'UTC'})}</div>
+      </div>
+      <div style="text-align:center;min-width:160px">
+        <div style="font-family:var(--mono);font-size:3rem;font-weight:700;color:${r.c}">${d.ci}</div>
+        <div style="font-family:var(--mono);font-size:.5rem;color:${r.c};letter-spacing:2px">${r.k} — ${r.w}</div>
+        <div style="background:var(--t6);height:8px;border-radius:4px;margin-top:8px;overflow:hidden"><div style="width:${d.ci}%;height:100%;background:${r.c};border-radius:4px"></div></div>
+      </div>
+    </div>`;
+
+    // ── REPORT BUTTON ──
+    html += `<div style="display:flex;gap:8px;margin-bottom:20px">
+      <button onclick="generateCountryReport('${code}')" style="background:var(--g1);color:#000;border:none;padding:8px 20px;font-family:var(--mono);font-size:.45rem;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px">📄 GENERATE PDF REPORT</button>
+      <button onclick="generateCountryReport('${code}','print')" style="background:var(--t7);color:var(--t3);border:1px solid var(--t6);padding:8px 16px;font-family:var(--mono);font-size:.45rem;cursor:pointer;border-radius:4px;letter-spacing:1px">🖨️ PRINT</button>
+    </div>`;
+
+    html += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+      <div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:16px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--r0);letter-spacing:2px;margin-bottom:8px">STRESS</div>
+        <div style="font-family:var(--mono);font-size:1.8rem;font-weight:700;color:${d.stress>50?'var(--r0)':d.stress>30?'var(--y0)':'var(--g0)'}">${d.stress}</div>
+        <div style="background:var(--t6);height:6px;border-radius:3px;margin-top:8px;overflow:hidden"><div style="width:${d.stress}%;height:100%;background:${d.stress>50?'var(--r0)':d.stress>30?'var(--y0)':'var(--g0)'};border-radius:3px"></div></div>
+      </div>
+      <div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:16px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--g0);letter-spacing:2px;margin-bottom:8px">ABSORPTION</div>
+        <div style="font-family:var(--mono);font-size:1.8rem;font-weight:700;color:var(--g0)">${d.absorption}</div>
+        <div style="background:var(--t6);height:6px;border-radius:3px;margin-top:8px;overflow:hidden"><div style="width:${Math.min(100,d.absorption*50)}%;height:100%;background:var(--g0);border-radius:3px"></div></div>
+      </div>
+      <div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:16px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--b0,#4fc3f7);letter-spacing:2px;margin-bottom:8px">RESILIENCE</div>
+        <div style="font-family:var(--mono);font-size:1.8rem;font-weight:700;color:var(--b0,#4fc3f7)">${d.resilience}</div>
+        <div style="background:var(--t6);height:6px;border-radius:3px;margin-top:8px;overflow:hidden"><div style="width:${Math.min(100,d.resilience*50)}%;height:100%;background:var(--b0,#4fc3f7);border-radius:3px"></div></div>
+      </div>
+    </div>`;
+
+    html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:16px;margin-bottom:24px">
+      <div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">COLLAPSE INDEX — CONTEXT</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px">
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-family:var(--mono);font-size:.5rem;color:var(--t3);min-width:100px">${d.name}</span><div style="flex:1;background:var(--t6);height:20px;border-radius:2px;overflow:hidden;position:relative"><div style="width:${d.ci}%;height:100%;background:${r.c}"></div><span style="position:absolute;right:8px;top:2px;font-family:var(--mono);font-size:.5rem;color:var(--t1)">${d.ci}</span></div></div>
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-family:var(--mono);font-size:.5rem;color:var(--t4);min-width:100px">${d.region} Avg</span><div style="flex:1;background:var(--t6);height:14px;border-radius:2px;overflow:hidden;position:relative"><div style="width:${regionAvgCI}%;height:100%;background:var(--y0);opacity:0.5"></div><span style="position:absolute;right:8px;top:0;font-family:var(--mono);font-size:.45rem;color:var(--t3)">${regionAvgCI.toFixed(1)}</span></div></div>
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-family:var(--mono);font-size:.5rem;color:var(--t4);min-width:100px">Global Avg</span><div style="flex:1;background:var(--t6);height:14px;border-radius:2px;overflow:hidden;position:relative"><div style="width:${globalAvgCI}%;height:100%;background:var(--t4);opacity:0.5"></div><span style="position:absolute;right:8px;top:0;font-family:var(--mono);font-size:.45rem;color:var(--t3)">${globalAvgCI.toFixed(1)}</span></div></div>
+      </div>
+    </div>`;
+
+    const indList = [
+      {k:'inflation',l:'Inflation',u:'%',w:20,c:50,icon:'📈'},
+      {k:'gdp_growth',l:'GDP Growth',u:'%',w:0,c:-3,inv:true,icon:'📊'},
+      {k:'debt_gdp',l:'Debt/GDP',u:'%',w:60,c:100,icon:'💰'},
+      {k:'reserves_months',l:'Reserves',u:' mo',w:3,c:1.5,inv:true,icon:'🏦'},
+      {k:'current_account',l:'Current Acct',u:'% GDP',w:-3,c:-8,inv:true,icon:'🔄'},
+      {k:'unemployment',l:'Unemployment',u:'%',w:10,c:20,icon:'👥'},
+      {k:'external_debt',l:'Ext. Debt/GNI',u:'%',w:60,c:150,icon:'🌐'},
+      {k:'trade_openness',l:'Trade Open.',u:'% GDP',icon:'🚢',neutral:true},
+      {k:'fdi_inflow',l:'FDI Inflows',u:'% GDP',icon:'💵',neutral:true},
+      {k:'broad_money',l:'Broad Money',u:'% GDP',icon:'💳',neutral:true},
+    ];
+
+    html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">ECONOMIC INDICATORS</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px">`;
+
+    indList.forEach(ind => {
+      const val = d.indicators?.[ind.k];
+      const display = val !== null && val !== undefined ? (typeof val === 'number' ? val.toFixed(1) : val) : 'N/A';
+      let color = 'var(--t1)';
+      if(!ind.neutral && val !== null && val !== undefined){
+        if(ind.inv){
+          color = val < ind.c ? 'var(--r0)' : val < ind.w ? 'var(--y0)' : 'var(--g0)';
+        } else if(ind.w !== undefined){
+          color = val > ind.c ? 'var(--r0)' : val > ind.w ? 'var(--y0)' : 'var(--g0)';
+        }
+      }
+      html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px">${ind.icon} ${ind.l}</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:1.2rem;font-weight:700;color:${color}">${display}${val !== null && val !== undefined ? ind.u : ''}</div>
+      </div>`;
+    });
+    html += `</div>`;
+
+    // ── HUMAN DEVELOPMENT ──
+    const hdiScore = d.hdi || 0;
+    const hdiColor = hdiScore > 70 ? 'var(--g0)' : hdiScore > 50 ? 'var(--y0)' : 'var(--r0)';
+
+    const hdiList = [
+      {k:'life_expectancy', l:'Life Expectancy', u:' yrs', icon:'❤️', good:'high', w:65, c:55},
+      {k:'literacy_rate', l:'Literacy Rate', u:'%', icon:'📚', good:'high', w:80, c:60},
+      {k:'poverty', l:'Extreme Poverty', u:'%', icon:'🏚️', good:'low', w:10, c:30},
+      {k:'undernourishment', l:'Undernourishment', u:'%', icon:'🍽️', good:'low', w:10, c:25},
+      {k:'maternal_mortality', l:'Maternal Mortality', u:'/100k', icon:'🏥', good:'low', w:100, c:300},
+      {k:'co2_emissions', l:'CO₂ Emissions', u:' t/cap', icon:'🌍', good:'neutral'},
+    ];
+
+    html += `<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+      <span style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px">HUMAN DEVELOPMENT</span>
+      <span style="font-family:var(--mono);font-size:.9rem;font-weight:700;color:${hdiColor}">HDI: ${hdiScore}</span>
+      <div style="flex:1;max-width:200px;background:var(--t6);height:8px;border-radius:4px;overflow:hidden"><div style="width:${hdiScore}%;height:100%;background:${hdiColor};border-radius:4px"></div></div>
+    </div>`;
+
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px">`;
+    hdiList.forEach(ind => {
+      const val = d.indicators?.[ind.k];
+      const display = val !== null && val !== undefined ? (typeof val === 'number' ? val.toFixed(1) : val) : 'N/A';
+      let color = 'var(--t1)';
+      if(val !== null && val !== undefined && ind.good !== 'neutral'){
+        if(ind.good === 'high'){
+          color = val < ind.c ? 'var(--r0)' : val < ind.w ? 'var(--y0)' : 'var(--g0)';
+        } else {
+          color = val > ind.c ? 'var(--r0)' : val > ind.w ? 'var(--y0)' : 'var(--g0)';
+        }
+      }
+      html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:12px">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-bottom:6px">${ind.icon} ${ind.l}</div>
+        <div style="font-family:var(--mono);font-size:1.2rem;font-weight:700;color:${color}">${display}${val !== null && val !== undefined ? ind.u : ''}</div>
+      </div>`;
+    });
+    html += `</div>`;
+
+    const wgiList = [
+      {k:'gov_effectiveness',l:'Gov Effectiveness'},
+      {k:'rule_of_law',l:'Rule of Law'},
+      {k:'political_stability',l:'Political Stability'},
+      {k:'control_corruption',l:'Control of Corruption'},
+      {k:'regulatory_quality',l:'Regulatory Quality'},
+    ];
+
+    html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">GOVERNANCE (WGI SCORES: -2.5 TO +2.5)</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:24px">`;
+
+    wgiList.forEach(w => {
+      const val = d.indicators?.[w.k];
+      const display = val !== null && val !== undefined ? val.toFixed(2) : 'N/A';
+      const pct = val !== null ? ((val + 2.5) / 5 * 100) : 0;
+      const color = val > 0.5 ? 'var(--g0)' : val > -0.5 ? 'var(--y0)' : 'var(--r0)';
+      html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:10px">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-bottom:6px">${w.l}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:var(--mono);font-size:1rem;font-weight:700;color:${color};min-width:50px">${display}</span>
+          <div style="flex:1;background:var(--t6);height:8px;border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${color};border-radius:4px"></div></div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+
+    const histIndicators = ['inflation','gdp_growth','debt_gdp','reserves_months','current_account'];
+    const histLabels = {'inflation':'Inflation %','gdp_growth':'GDP Growth %','debt_gdp':'Debt/GDP %','reserves_months':'Reserves (months)','current_account':'Current Account %'};
+
+    if(d.history && Object.keys(d.history).length > 0){
+      html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">HISTORICAL TRENDS (10-YEAR)</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px">`;
+
+      histIndicators.forEach(key => {
+        const hist = d.history?.[key] || {};
+        const entries = Object.entries(hist).sort((a,b) => a[0].localeCompare(b[0]));
+        if(entries.length < 2) return;
+
+        const vals = entries.map(e => e[1]);
+        const years = entries.map(e => e[0]);
+        const mn = Math.min(...vals);
+        const mx = Math.max(...vals);
+        const range = mx - mn || 1;
+        const w = 260;
+        const h = 60;
+
+        let path = '';
+        let dots = '';
+        entries.forEach((e, i) => {
+          const x = (i / (entries.length - 1)) * w;
+          const y = h - ((e[1] - mn) / range * h);
+          if(i === 0) path += `M${x},${y}`;
+          else path += ` L${x},${y}`;
+          if(i === entries.length - 1){
+            dots += `<circle cx="${x}" cy="${y}" r="3" fill="var(--g0)"/>`;
+            dots += `<text x="${x-4}" y="${y-8}" fill="var(--g0)" font-size="9" font-family="var(--mono)">${e[1].toFixed(1)}</text>`;
+          }
+        });
+
+        html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px">${histLabels[key] || key}</span>
+            <span style="font-family:var(--mono);font-size:.4rem;color:var(--t4)">${years[0]}–${years[years.length-1]}</span>
+          </div>
+          <svg width="100%" viewBox="0 0 ${w} ${h+10}" preserveAspectRatio="none">
+            <path d="${path}" fill="none" stroke="var(--g0)" stroke-width="1.5" opacity="0.8"/>
+            ${dots}
+          </svg>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    if(d.gdelt){
+      html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">NEWS SENTIMENT (GDELT — 14 DAY)</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px">`;
+
+      const tone = d.gdelt?.tone?.tone || 0;
+      const vol = d.gdelt?.volume?.volume || 0;
+      const trend = d.gdelt?.volume?.trend || 0;
+
+      html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:12px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-bottom:6px">TONE</div>
+        <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:${tone<-3?'var(--r0)':tone<0?'var(--y0)':'var(--g0)'}">${tone.toFixed(2)}</div>
+        <div style="font-family:var(--mono);font-size:.35rem;color:var(--t4)">${tone<-3?'Very Negative':tone<0?'Negative':'Positive'}</div>
+      </div>`;
+      html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:12px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-bottom:6px">VOLUME</div>
+        <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--t1)">${vol.toLocaleString()}</div>
+        <div style="font-family:var(--mono);font-size:.35rem;color:var(--t4)">Articles (30d)</div>
+      </div>`;
+      html += `<div style="background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:12px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-bottom:6px">TREND</div>
+        <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:${trend>20?'var(--r0)':trend>0?'var(--y0)':'var(--g0)'}">${trend>0?'+':''}${trend.toFixed(1)}%</div>
+        <div style="font-family:var(--mono);font-size:.35rem;color:var(--t4)">${trend>20?'Surging':trend>0?'Rising':'Declining'} Coverage</div>
+      </div>`;
+      html += `</div>`;
+    }
+
+    if(peers.length > 0){
+      html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:12px">REGIONAL PEERS (${d.region})</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:24px">`;
+      peers.forEach(p => {
+        const pr = risk(p.ci);
+        html += `<div onclick="openDeepDive('${p.code}')" style="background:var(--t7);border:1px solid ${pr.c}33;border-radius:4px;padding:10px;text-align:center;cursor:pointer">
+          <div style="font-size:1.2rem">${p.flag}</div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${p.name}</div>
+          <div style="font-family:var(--mono);font-size:1.1rem;font-weight:700;color:${pr.c};margin:4px 0">${p.ci}</div>
+          <div style="font-family:var(--mono);font-size:.35rem;color:${pr.c};letter-spacing:1px">${pr.k}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    container.innerHTML = html;
+    window.scrollTo({top:0,behavior:'smooth'});
+
+  } catch(e) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;font-family:var(--mono);color:var(--r0)">Error loading data: ${e.message}</div>`;
+  }
+}
+
+// ── Fetch Live Data from API ──
+async function fetchLiveData(){
+  try {
+    const resp = await fetch('/api/data');
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    // Convert countries object to array
+    DATA = Object.values(data.countries).map(c => ({
+      code: c.code,
+      name: c.name,
+      flag: c.flag,
+      ci: c.ci,
+      region: c.region,
+      indicators: c.indicators || {},
+    }));
+
+    FI_DATA = data.fracture_index || {};
+    CEI_DATA = data.causal_entropy || {};
+    isLiveData = true;
+
+    // Update data source indicator
+    const heroTag = document.querySelector('.hero-tag');
+    if(heroTag){
+      const sources = data.data_sources || {};
+      const wb = sources.world_bank ? `World Bank (${sources.world_bank.indicators} indicators)` : '';
+      const fred = sources.fred ? 'FRED' : '';
+      const gdelt = sources.gdelt ? `GDELT (${sources.gdelt.countries_monitored} countries)` : '';
+      heroTag.innerHTML = `<span style="color:var(--g0)">● LIVE DATA</span> &bull; ${[wb, fred, gdelt].filter(Boolean).join(' &bull; ')} &bull; Updated: ${new Date(data.timestamp).toLocaleTimeString('en-GB', {timeZone: 'UTC'})} UTC`;
+    }
+
+    updateCounters();
+    renderOverview();
+    renderCountries();
+    renderFracture();
+    renderTicker();
+    fillMcSel();
+    fillCmpSel();
+    renderHeatmap();
+    renderScenarios();
+    renderWarnings();
+    renderAPI();
+    renderContagion();
+
+    const aiCount = document.getElementById('aiCountryCount');
+    if(aiCount) aiCount.textContent = DATA.length;
+
+    checkAlerts();
+
+    if(window._onDataLoaded) window._onDataLoaded();
+    setTimeout(handleHash, 500);
+
+    console.log(`[CAUSENTIA] Live data loaded: ${DATA.length} countries, FI: ${FI_DATA.score}, CEI: ${CEI_DATA.score}`);
+  } catch(e) {
+    console.error('[CAUSENTIA] API error, using simulation:', e);
+    if(DATA.length === 0) loadFallbackData();
+  }
+}
+
+// ── Fallback static data if API fails ──
+function loadFallbackData(){
+  const STATIC = [
+    {code:"VE",name:"Venezuela",flag:"🇻🇪",ci:92.4,indicators:{inflation:190,debt_gdp:350,gdp_growth:-8}},
+    {code:"LB",name:"Lebanon",flag:"🇱🇧",ci:88.7,indicators:{inflation:171,debt_gdp:283,gdp_growth:-6.7}},
+    {code:"AR",name:"Argentina",flag:"🇦🇷",ci:82.1,indicators:{inflation:142,debt_gdp:89,gdp_growth:-1.8}},
+    {code:"ZW",name:"Zimbabwe",flag:"🇿🇼",ci:79.5,indicators:{inflation:560,debt_gdp:97,gdp_growth:-3.5}},
+    {code:"TR",name:"Turkey",flag:"🇹🇷",ci:77.8,indicators:{inflation:31.1,debt_gdp:42,gdp_growth:3.2}},
+    {code:"SD",name:"Sudan",flag:"🇸🇩",ci:76.3,indicators:{inflation:256,debt_gdp:186,gdp_growth:-2.5}},
+    {code:"SY",name:"Syria",flag:"🇸🇾",ci:74.2,indicators:{inflation:139,debt_gdp:60,gdp_growth:-5}},
+    {code:"PK",name:"Pakistan",flag:"🇵🇰",ci:71.8,indicators:{inflation:24.5,debt_gdp:78,gdp_growth:1.7}},
+    {code:"ET",name:"Ethiopia",flag:"🇪🇹",ci:70.1,indicators:{inflation:29.3,debt_gdp:55,gdp_growth:5.7}},
+    {code:"NG",name:"Nigeria",flag:"🇳🇬",ci:67.2,indicators:{inflation:28.9,debt_gdp:39,gdp_growth:2.9}},
+    {code:"EG",name:"Egypt",flag:"🇪🇬",ci:62.1,indicators:{inflation:33.7,debt_gdp:92,gdp_growth:3.8}},
+    {code:"US",name:"United States",flag:"🇺🇸",ci:24.1,indicators:{inflation:3.4,debt_gdp:124,gdp_growth:2.5}},
+  ];
+  DATA = STATIC;
+  FI_DATA = {score: 58.3, status: "STRESSED", components: {}};
+  CEI_DATA = {score: 47.1, status: "FLUX"};
+
+  const heroTag = document.querySelector('.hero-tag');
+  if(heroTag) heroTag.innerHTML = '<span style="color:var(--y0)">● SIMULATION MODE</span> &bull; API unavailable &bull; Using static estimates';
+
+  updateCounters();
+  renderOverview();
+  renderCountries();
+  renderTicker();
+  fillMcSel();
+  fillCmpSel();
+  renderHeatmap();
+  renderScenarios();
+  renderWarnings();
+  renderAPI();
+  renderContagion();
+
+  setTimeout(handleHash, 500);
+}
+
+// ── Init ──
+renderInnovations();
+fetchLiveData();
+
+// Refresh from API every 6 hours
+setInterval(fetchLiveData, 6 * 60 * 60 * 1000);
+
+// ── Custom Scenario Builder ──
+function updateSliderVal(id, unit){
+  const slider = document.getElementById(id);
+  const display = document.getElementById(id + '_val');
+  if(!slider || !display) return;
+  const val = parseFloat(slider.value);
+  const color = val > 0 ? 'var(--r0)' : val < 0 ? 'var(--g0)' : 'var(--t1)';
+  display.style.color = color;
+  display.textContent = (val > 0 ? '+' : '') + val + unit;
+}
+
+function resetSliders(){
+  const units = {sl_inflation:'%',sl_gdp:'%',sl_oil:'%',sl_rates:'bp',sl_debt:'%',sl_reserves:'mo',sl_ca:'%GDP',sl_unemp:'%'};
+  Object.keys(units).forEach(id => {
+    const el = document.getElementById(id);
+    if(el){
+      el.value = 0;
+      updateSliderVal(id, units[id]);
+    }
+  });
+  const resultsDiv = document.getElementById('scenarioResults');
+  if(resultsDiv) resultsDiv.style.display = 'none';
+}
+
+function runCustomScenario(){
+  const inflation = parseFloat(document.getElementById('sl_inflation')?.value || 0);
+  const gdp = parseFloat(document.getElementById('sl_gdp')?.value || 0);
+  const oil = parseFloat(document.getElementById('sl_oil')?.value || 0);
+  const rates = parseFloat(document.getElementById('sl_rates')?.value || 0);
+  const debt = parseFloat(document.getElementById('sl_debt')?.value || 0);
+  const reserves = parseFloat(document.getElementById('sl_reserves')?.value || 0);
+  const ca = parseFloat(document.getElementById('sl_ca')?.value || 0);
+  const unemp = parseFloat(document.getElementById('sl_unemp')?.value || 0);
+
+  const oilInflationEffect = oil * 0.16;
+  const oilCAEffect = oil * -0.06;
+  const rateDebtEffect = rates * 0.025;
+  const rateReservesEffect = rates * -0.005;
+
+  const shocks = {};
+  const totalInflation = inflation + oilInflationEffect;
+  const totalGDP = gdp;
+  const totalDebt = debt + rateDebtEffect;
+  const totalReserves = reserves + rateReservesEffect;
+  const totalCA = ca + oilCAEffect;
+
+  if(totalInflation !== 0) shocks.inflation = totalInflation;
+  if(totalGDP !== 0) shocks.gdp_growth = totalGDP;
+  if(totalDebt !== 0) shocks.debt_gdp = totalDebt;
+  if(totalReserves !== 0) shocks.reserves_months = totalReserves;
+  if(totalCA !== 0) shocks.current_account = totalCA;
+  if(unemp !== 0) shocks.unemployment = unemp;
+
+  if(Object.keys(shocks).length === 0){
+    alert('Adjust at least one slider before simulating.');
+    return;
+  }
+
+  document.querySelectorAll('[id^="sc-"]').forEach(el => {
+    el.classList.remove('sc-active');
+    el.style.borderColor = 'var(--t6)';
+    el.style.transform = 'none';
+  });
+
+  const resultsDiv = document.getElementById('scenarioResults');
+  resultsDiv.style.display = 'block';
+  resultsDiv.innerHTML = '<div style="text-align:center;padding:40px;font-family:var(--mono);color:var(--g1)">Running custom simulation...</div>';
+
+  const country_overrides = {};
+  if(Math.abs(oil) > 10){
+    const oilExporters = ['SA','AE','QA','NO','RU','DZ','AO','NG','EC','CO','IQ'];
+    oilExporters.forEach(code => {
+      country_overrides[code] = {
+        inflation: -(oilInflationEffect * 0.5),
+        current_account: -(oilCAEffect * 1.5),
+        gdp_growth: oil > 0 ? 2 : -2,
+      };
+    });
+  }
+
+  fetch('/api/scenario', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ shocks, country_overrides })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.error){ resultsDiv.innerHTML = `<div style="color:var(--r0);padding:20px">${data.error}</div>`; return; }
+
+    const results = data.results;
+    const summary = data.summary;
+
+    let descParts = [];
+    if(totalInflation !== 0) descParts.push(`Inflation ${totalInflation>0?'+':''}${totalInflation.toFixed(1)}%`);
+    if(totalGDP !== 0) descParts.push(`GDP ${totalGDP>0?'+':''}${totalGDP}%`);
+    if(oil !== 0) descParts.push(`Oil ${oil>0?'+':''}${oil}%`);
+    if(rates !== 0) descParts.push(`Rates ${rates>0?'+':''}${rates}bp`);
+    if(totalDebt !== 0) descParts.push(`Debt ${totalDebt>0?'+':''}${totalDebt.toFixed(1)}%`);
+    if(totalReserves !== 0) descParts.push(`Reserves ${totalReserves>0?'+':''}${totalReserves.toFixed(1)}mo`);
+    if(totalCA !== 0) descParts.push(`CA ${totalCA>0?'+':''}${totalCA.toFixed(1)}%`);
+    if(unemp !== 0) descParts.push(`Unemp ${unemp>0?'+':''}${unemp}%`);
+
+    let html = '';
+
+    html += `<div style="background:rgba(0,255,136,0.05);border:1px solid var(--g1)44;border-radius:4px;padding:12px;margin-bottom:16px">
+      <div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:4px">CUSTOM SCENARIO RESULTS</div>
+      <div style="font-family:var(--mono);font-size:.42rem;color:var(--t3)">${descParts.join(' • ')}</div>
+    </div>`;
+
+    html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);letter-spacing:1px;margin-bottom:6px">AVG CI CHANGE</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:${summary.avg_delta>0?'var(--r0)':'var(--g0)'}">${summary.avg_delta>0?'+':''}${summary.avg_delta}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--r0);letter-spacing:1px;margin-bottom:6px">CRITICAL</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--r0)">${summary.old_critical} → ${summary.critical}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:#ff9800;letter-spacing:1px;margin-bottom:6px">DANGER</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:#ff9800">${summary.old_danger} → ${summary.danger}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--r0);letter-spacing:1px;margin-bottom:6px">DOWNGRADES</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--r0)">${summary.downgrades}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;padding:14px;text-align:center">
+        <div style="font-family:var(--mono);font-size:.4rem;color:var(--g0);letter-spacing:1px;margin-bottom:6px">BENEFICIARIES</div>
+        <div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--g0)">${summary.beneficiaries}</div>
+      </div>
+    </div>`;
+
+    const mostAffected = results.filter(r => r.delta > 0).slice(0, 15);
+    if(mostAffected.length > 0){
+      html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--r0);letter-spacing:2px;margin-bottom:10px">⚠ MOST AFFECTED</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-bottom:20px">`;
+      mostAffected.forEach(r => {
+        const levelChange = r.originalLevel !== r.newLevel;
+        const newR = risk(r.newCI);
+        html += `<div onclick="openDeepDive('${r.code}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(244,67,54,${Math.min(0.3, r.delta/50)});border:1px solid ${newR.c}44;border-radius:4px;cursor:pointer">
+          <span style="font-size:1.1rem">${r.flag}</span>
+          <div style="flex:1">
+            <div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${r.name}</div>
+            <div style="font-family:var(--mono);font-size:.35rem;color:var(--t4)">${r.originalLevel} → <span style="color:${newR.c};font-weight:${levelChange?'700':'400'}">${r.newLevel}</span></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--mono);font-size:.5rem;color:var(--t3)">${r.originalCI} → <span style="color:${newR.c};font-weight:700">${r.newCI}</span></div>
+            <div style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:var(--r0)">+${r.delta.toFixed(1)}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    const beneficiaries = results.filter(r => r.delta < -1).sort((a,b) => a.delta - b.delta).slice(0, 10);
+    if(beneficiaries.length > 0){
+      html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g0);letter-spacing:2px;margin-bottom:10px">✓ POTENTIAL BENEFICIARIES</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-bottom:20px">`;
+      beneficiaries.forEach(r => {
+        const newR = risk(r.newCI);
+        html += `<div onclick="openDeepDive('${r.code}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(76,175,80,0.08);border:1px solid var(--g0)33;border-radius:4px;cursor:pointer">
+          <span style="font-size:1.1rem">${r.flag}</span>
+          <div style="flex:1"><div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${r.name}</div></div>
+          <div style="text-align:right">
+            <div style="font-family:var(--mono);font-size:.5rem;color:var(--t3)">${r.originalCI} → <span style="color:var(--g0);font-weight:700">${r.newCI}</span></div>
+            <div style="font-family:var(--mono);font-size:.55rem;font-weight:700;color:var(--g0)">${r.delta.toFixed(1)}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    const sorted = [...results].sort((a,b) => b.newCI - a.newCI);
+    html += `<div style="font-family:var(--mono);font-size:.45rem;color:var(--g1);letter-spacing:2px;margin-bottom:10px">FULL IMPACT TABLE — ALL ${sorted.length} COUNTRIES</div>`;
+    html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.5rem">`;
+    html += `<tr style="border-bottom:1px solid var(--t5)">
+      <th style="text-align:left;padding:8px;color:var(--t4);font-size:.4rem;letter-spacing:1px">COUNTRY</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">CURRENT CI</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">NEW CI</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">CHANGE</th>
+      <th style="text-align:center;padding:8px;color:var(--t4);font-size:.4rem">STATUS</th>
+    </tr>`;
+    sorted.forEach(r => {
+      const newR = risk(r.newCI);
+      const oldR = risk(r.originalCI);
+      const deltaColor = r.delta > 5 ? 'var(--r0)' : r.delta > 0 ? 'var(--y0)' : r.delta < -2 ? 'var(--g0)' : 'var(--t3)';
+      const levelChange = r.originalLevel !== r.newLevel;
+      html += `<tr style="border-bottom:1px solid var(--t6);cursor:pointer" onclick="openDeepDive('${r.code}')" onmouseover="this.style.background='var(--t7)'" onmouseout="this.style.background='none'">
+        <td style="padding:6px 8px"><span style="margin-right:6px">${r.flag}</span>${r.name}</td>
+        <td style="text-align:center;padding:6px;color:${oldR.c}">${r.originalCI}</td>
+        <td style="text-align:center;padding:6px;color:${newR.c};font-weight:700">${r.newCI}</td>
+        <td style="text-align:center;padding:6px;color:${deltaColor};font-weight:700">${r.delta>0?'+':''}${r.delta}</td>
+        <td style="text-align:center;padding:6px"><span style="color:${newR.c};font-size:.4rem;letter-spacing:1px;${levelChange?'font-weight:700;text-decoration:underline':''}">${r.newLevel}</span></td>
+      </tr>`;
+    });
+    html += `</table></div>`;
+
+    resultsDiv.innerHTML = html;
+    resultsDiv.scrollIntoView({behavior:'smooth',block:'start'});
+  })
+  .catch(err => {
+    resultsDiv.innerHTML = `<div style="color:var(--r0);padding:20px;font-family:var(--mono)">Error: ${err.message}</div>`;
+  });
+}
+
+// ── PDF Report Generator ──
+async function generateCountryReport(code, mode){
+  try {
+    const resp = await fetch(`/api/country/${code}`);
+    const d = await resp.json();
+    if(d.error){ alert('Error loading data'); return; }
+
+    const r = risk(d.ci);
+    const ind = d.indicators || {};
+    const now = new Date().toLocaleString('en-GB', {timeZone: 'UTC'});
+
+    const regionCountries = DATA ? DATA.filter(c => c.region === d.region) : [];
+    const regionAvg = regionCountries.length ? (regionCountries.reduce((s,c) => s + c.ci, 0) / regionCountries.length).toFixed(1) : 'N/A';
+    const globalAvg = DATA ? (DATA.reduce((s,c) => s + c.ci, 0) / DATA.length).toFixed(1) : 'N/A';
+    const rank = DATA ? [...DATA].sort((a,b) => b.ci - a.ci).findIndex(c => c.code === code) + 1 : 'N/A';
+
+    function indRow(label, value, unit, threshold) {
+      if(value === null || value === undefined) return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e0e0e0;color:#555">${label}</td><td style="padding:6px 12px;border-bottom:1px solid #e0e0e0;color:#999;text-align:right">N/A</td></tr>`;
+      const v = typeof value === 'number' ? value.toFixed(1) : value;
+      let color = '#333';
+      if(threshold){
+        if(threshold.type === 'high' && value > threshold.danger) color = '#d32f2f';
+        else if(threshold.type === 'high' && value > threshold.warn) color = '#f57c00';
+        else if(threshold.type === 'low' && value < threshold.danger) color = '#d32f2f';
+        else if(threshold.type === 'low' && value < threshold.warn) color = '#f57c00';
+        else color = '#2e7d32';
+      }
+      return `<tr><td style="padding:6px 12px;border-bottom:1px solid #e0e0e0;color:#555">${label}</td><td style="padding:6px 12px;border-bottom:1px solid #e0e0e0;text-align:right;font-weight:600;color:${color}">${v}${unit || ''}</td></tr>`;
+    }
+
+    const riskColors = {SAFE:'#2e7d32',CAUTION:'#f57c00',DANGER:'#e65100',CRITICAL:'#d32f2f',COLLAPSE:'#b71c1c'};
+    const rColor = riskColors[d.level] || '#333';
+
+    const html = `<!DOCTYPE html><html><head>
+      <title>CAUSENTIA Report — ${d.name}</title>
+      <style>
+        @page { size: A4; margin: 20mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; font-size: 11px; line-height: 1.6; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #00cc6a; padding-bottom: 16px; margin-bottom: 20px; }
+        .logo { font-size: 16px; font-weight: 800; letter-spacing: 4px; color: #0a0a0a; }
+        .subtitle { font-size: 8px; color: #888; letter-spacing: 2px; margin-top: 2px; }
+        .date { font-size: 9px; color: #888; text-align: right; }
+        .country-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px; background: #f8f8f8; border-radius: 4px; }
+        .country-name { font-size: 24px; font-weight: 700; }
+        .ci-score { font-size: 36px; font-weight: 800; color: ${rColor}; text-align: center; }
+        .ci-label { font-size: 10px; color: ${rColor}; letter-spacing: 2px; font-weight: 600; text-align: center; }
+        .section { margin-bottom: 16px; }
+        .section-title { font-size: 11px; font-weight: 700; color: #0a0a0a; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; text-align: center; }
+        .metric-box { background: #f5f5f5; border-radius: 4px; padding: 12px; text-align: center; }
+        .metric-value { font-size: 20px; font-weight: 700; margin: 4px 0; }
+        .metric-label { font-size: 8px; color: #888; letter-spacing: 1px; text-transform: uppercase; }
+        .bar { height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+        .bar-fill { height: 100%; border-radius: 4px; }
+        .footer { margin-top: 24px; padding-top: 12px; border-top: 2px solid #00cc6a; font-size: 8px; color: #999; text-align: center; line-height: 1.8; }
+        .disclaimer { background: #fff9e6; border: 1px solid #ffe082; border-radius: 4px; padding: 8px 12px; font-size: 8px; color: #666; margin-top: 12px; }
+        .page-break { page-break-before: always; }
+      </style>
+    </head><body>
+
+    <div class="header">
+      <div>
+        <div class="logo">C A U S E N T I A</div>
+        <div class="subtitle">SOVEREIGN CRISIS EARLY WARNING SYSTEM</div>
+      </div>
+      <div class="date">
+        Generated: ${now} UTC<br>
+        Data: World Bank • FRED • GDELT<br>
+        Report ID: ${code}-${Date.now().toString(36).toUpperCase()}
+      </div>
+    </div>
+
+    <div class="country-header">
+      <div>
+        <div class="country-name">${d.flag} ${d.name}</div>
+        <div style="font-size:10px;color:#888;margin-top:4px">ISO: ${d.code}/${d.iso3} • Region: ${d.region} • Rank: #${rank} of ${DATA ? DATA.length : 80}</div>
+      </div>
+      <div>
+        <div class="ci-score">${d.ci}</div>
+        <div class="ci-label">${d.level} — ${d.risk_window || r.w}</div>
+        <div class="bar" style="width:120px"><div class="bar-fill" style="width:${d.ci}%;background:${rColor}"></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Risk Decomposition</div>
+      <div class="grid3">
+        <div class="metric-box">
+          <div class="metric-label">Stress</div>
+          <div class="metric-value" style="color:${d.stress > 40 ? '#d32f2f' : d.stress > 25 ? '#f57c00' : '#2e7d32'}">${d.stress}</div>
+          <div class="bar"><div class="bar-fill" style="width:${Math.min(100, d.stress * 2)}%;background:${d.stress > 40 ? '#d32f2f' : '#f57c00'}"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Absorption</div>
+          <div class="metric-value" style="color:#2e7d32">${d.absorption}</div>
+          <div class="bar"><div class="bar-fill" style="width:${Math.min(100, d.absorption * 50)}%;background:#2e7d32"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Resilience</div>
+          <div class="metric-value" style="color:#1565c0">${d.resilience}</div>
+          <div class="bar"><div class="bar-fill" style="width:${Math.min(100, d.resilience * 50)}%;background:#1565c0"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Comparative Context</div>
+      <table>
+        <tr><td style="padding:4px 12px;border-bottom:1px solid #eee">Country CI</td><td style="padding:4px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:700;color:${rColor}">${d.ci}</td></tr>
+        <tr><td style="padding:4px 12px;border-bottom:1px solid #eee">${d.region} Average</td><td style="padding:4px 12px;border-bottom:1px solid #eee;text-align:right">${regionAvg}</td></tr>
+        <tr><td style="padding:4px 12px;border-bottom:1px solid #eee">Global Average</td><td style="padding:4px 12px;border-bottom:1px solid #eee;text-align:right">${globalAvg}</td></tr>
+      </table>
+    </div>
+
+    <div class="grid2">
+      <div class="section">
+        <div class="section-title">Economic Indicators</div>
+        <table>
+          ${indRow('Inflation', ind.inflation, '%', {type:'high',warn:10,danger:25})}
+          ${indRow('GDP Growth', ind.gdp_growth, '%', {type:'low',warn:1,danger:-2})}
+          ${indRow('Debt/GDP', ind.debt_gdp, '%', {type:'high',warn:60,danger:100})}
+          ${indRow('Reserves', ind.reserves_months, ' months', {type:'low',warn:3,danger:1.5})}
+          ${indRow('Current Account', ind.current_account, '% GDP', {type:'low',warn:-3,danger:-8})}
+          ${indRow('Unemployment', ind.unemployment, '%', {type:'high',warn:10,danger:20})}
+          ${indRow('External Debt/GNI', ind.external_debt, '%', {type:'high',warn:60,danger:100})}
+          ${indRow('Trade Openness', ind.trade_openness, '% GDP')}
+          ${indRow('FDI Inflows', ind.fdi_inflow, '% GDP')}
+        </table>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Governance (WGI: -2.5 to +2.5)</div>
+        <table>
+          ${indRow('Political Stability', ind.political_stability, '', {type:'low',warn:0,danger:-1})}
+          ${indRow('Gov Effectiveness', ind.gov_effectiveness, '', {type:'low',warn:0,danger:-1})}
+          ${indRow('Rule of Law', ind.rule_of_law, '', {type:'low',warn:0,danger:-1})}
+          ${indRow('Corruption Control', ind.control_corruption, '', {type:'low',warn:0,danger:-1})}
+          ${indRow('Regulatory Quality', ind.regulatory_quality, '', {type:'low',warn:0,danger:-1})}
+        </table>
+
+        <div class="section-title" style="margin-top:12px">Human Development</div>
+        <table>
+          ${indRow('Life Expectancy', ind.life_expectancy, ' years', {type:'low',warn:65,danger:55})}
+          ${indRow('Literacy Rate', ind.literacy_rate, '%', {type:'low',warn:80,danger:60})}
+          ${indRow('Poverty Rate', ind.poverty, '%', {type:'high',warn:10,danger:30})}
+          ${indRow('Undernourishment', ind.undernourishment, '%', {type:'high',warn:10,danger:25})}
+          ${indRow('Maternal Mortality', ind.maternal_mortality, '/100k', {type:'high',warn:100,danger:300})}
+          ${indRow('HDI Score', d.hdi, '', {type:'low',warn:50,danger:30})}
+        </table>
+      </div>
+    </div>
+
+    ${d.gdelt ? `<div class="section">
+      <div class="section-title">News Sentiment (GDELT)</div>
+      <div class="grid3">
+        <div class="metric-box">
+          <div class="metric-label">Media Tone</div>
+          <div class="metric-value" style="color:${(ind.gdelt_tone||0)<-3?'#d32f2f':(ind.gdelt_tone||0)<0?'#f57c00':'#2e7d32'}">${(ind.gdelt_tone||0).toFixed(2)}</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Article Volume</div>
+          <div class="metric-value">${(d.gdelt?.volume?.volume || 0).toLocaleString()}</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Coverage Trend</div>
+          <div class="metric-value" style="color:${(ind.gdelt_trend||0)>20?'#d32f2f':'#333'}">${(ind.gdelt_trend||0)>0?'+':''}${(ind.gdelt_trend||0).toFixed(1)}%</div>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <div class="disclaimer">
+      <strong>Disclaimer:</strong> This report is generated by CAUSENTIA, an open-source analytical platform for academic research.
+      It does not constitute financial, investment, or policy advice. All data sourced from World Bank Open Data, FRED, and GDELT Project.
+      Methodology and source code available at causentia.org.
+    </div>
+
+    <div class="footer">
+      C A U S E N T I A — Sovereign Crisis Early Warning System<br>
+      causentia.org • Open Source • MIT License<br>
+      © ${new Date().getFullYear()} CAUSENTIA Research
+    </div>
+
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+
+    if(mode === 'print'){
+      setTimeout(() => { win.print(); }, 500);
+    } else {
+      setTimeout(() => { win.print(); }, 800);
+    }
+
+  } catch(e) {
+    alert('Error generating report: ' + e.message);
+  }
+}
+
+// ── Alert System ──
+function checkAlerts(){
+  if(!DATA || DATA.length === 0) return;
+
+  const alerts = [];
+
+  DATA.filter(c => c.ci >= 70).forEach(c => {
+    alerts.push({
+      type: 'critical',
+      icon: '🔴',
+      text: `${c.flag} ${c.name} is CRITICAL (CI: ${c.ci})`,
+      code: c.code,
+      color: 'var(--r0)'
+    });
+  });
+
+  DATA.filter(c => c.ci >= 50 && c.ci < 70).forEach(c => {
+    alerts.push({
+      type: 'danger',
+      icon: '🟠',
+      text: `${c.flag} ${c.name} is in DANGER (CI: ${c.ci})`,
+      code: c.code,
+      color: '#ff9800'
+    });
+  });
+
+  DATA.filter(c => c.ci >= 40 && c.ci < 50).forEach(c => {
+    alerts.push({
+      type: 'approaching',
+      icon: '⚠️',
+      text: `${c.flag} ${c.name} approaching DANGER (CI: ${c.ci})`,
+      code: c.code,
+      color: 'var(--y0)'
+    });
+  });
+
+  if(alerts.length > 0){
+    const bar = document.getElementById('alertBar');
+    const content = document.getElementById('alertBarContent');
+    if(!bar || !content) return;
+
+    let html = `<span style="color:var(--r0);font-weight:700;flex-shrink:0">🚨 ${alerts.length} ALERT${alerts.length>1?'S':''}:</span>`;
+
+    alerts.forEach(a => {
+      html += `<span onclick="openDeepDive('${a.code}')" style="color:${a.color};cursor:pointer;white-space:nowrap;padding:2px 8px;background:rgba(255,255,255,0.03);border-radius:2px">${a.text}</span>`;
+    });
+
+    content.innerHTML = html;
+    bar.style.display = 'block';
+
+    if(typeof Notification !== 'undefined' && Notification.permission === 'granted' && alerts.some(a => a.type === 'critical')){
+      const critAlerts = alerts.filter(a => a.type === 'critical');
+      new Notification('CAUSENTIA Alert', {
+        body: critAlerts.map(a => a.text.replace(/[^\w\s:().]/g, '')).join('\n'),
+        icon: '/favicon.ico',
+        tag: 'causentia-alert'
+      });
+    }
+  }
+}
+
+function openAlertPanel(){
+  const panel = document.getElementById('alertPanel');
+  const overlay = document.getElementById('alertOverlay');
+  if(panel) panel.style.display = 'block';
+  if(overlay) overlay.style.display = 'block';
+  if(typeof Notification !== 'undefined' && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+}
+
+function closeAlertPanel(){
+  const panel = document.getElementById('alertPanel');
+  const overlay = document.getElementById('alertOverlay');
+  if(panel) panel.style.display = 'none';
+  if(overlay) overlay.style.display = 'none';
+}
+
+function subscribeAlerts(){
+  const email = document.getElementById('alertEmail').value.trim();
+  const countries = document.getElementById('alertCountries').value.trim();
+  const triggers = {
+    critical: document.getElementById('alert_critical').checked,
+    danger: document.getElementById('alert_danger').checked,
+    upgrade: document.getElementById('alert_upgrade').checked,
+    spike: document.getElementById('alert_spike').checked,
+  };
+  const freq = document.querySelector('input[name="alertFreq"]:checked')?.value || 'realtime';
+
+  if(!email || !email.includes('@')){
+    const status = document.getElementById('alertStatus');
+    if(status) status.innerHTML = '<span style="color:var(--r0)">Please enter a valid email address</span>';
+    return;
+  }
+
+  const subscription = {
+    email,
+    countries: countries ? countries.split(',').map(c => c.trim().toUpperCase()) : 'all',
+    triggers,
+    frequency: freq,
+    subscribedAt: new Date().toISOString(),
+  };
+
+  const subs = JSON.parse(localStorage.getItem('causentia_subs') || '[]');
+  subs.push(subscription);
+  localStorage.setItem('causentia_subs', JSON.stringify(subs));
+
+  fetch('/api/subscribe', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(subscription)
+  }).catch(() => {});
+
+  const status = document.getElementById('alertStatus');
+  if(status) status.innerHTML = `<span style="color:var(--g0)">✓ Subscribed! You'll receive alerts at <strong>${email.replace(/</g, '&lt;')}</strong></span>`;
+
+  setTimeout(closeAlertPanel, 2000);
+}
+
+// ── AI Chat ──
+function copyAIMsg(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const text = el.innerText || el.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.parentElement.querySelector('button[title="Copy"]');
+    if(btn){ btn.textContent = '✓'; setTimeout(()=>{ btn.textContent = '📋'; }, 1500); }
+  });
+}
+
+function exportAIPDF(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const text = el.innerText || el.textContent;
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>CAUSENTIA AI Analysis</title>
+    <style>
+      body { font-family: 'Courier New', monospace; padding: 40px; color: #111; font-size: 12px; line-height: 1.8; max-width: 800px; margin: 0 auto; }
+      h1 { font-size: 18px; color: #0a0a0a; border-bottom: 2px solid #00ff88; padding-bottom: 8px; }
+      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+      .logo { font-size: 14px; font-weight: bold; letter-spacing: 3px; }
+      .date { font-size: 10px; color: #666; }
+      .content { white-space: pre-wrap; }
+      .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ccc; font-size: 9px; color: #999; text-align: center; }
+    </style>
+  </head><body>
+    <div class="header">
+      <div class="logo">C A U S E N T I A</div>
+      <div class="date">${new Date().toLocaleString('en-GB', {timeZone: 'UTC'})} UTC</div>
+    </div>
+    <h1>AI Analyst Report</h1>
+    <div class="content">${(text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+    <div class="footer">
+      CAUSENTIA — Sovereign Crisis Early Warning System<br>
+      Open-source analytical platform for academic research. Not financial, investment, or policy advice.<br>
+      Data: World Bank, FRED, GDELT | causentia.org
+    </div>
+  </body></html>`);
+  win.document.close();
+  setTimeout(() => { win.print(); }, 500);
+}
+
+function toggleAIChat(){
+  const panel = document.getElementById('aiChatPanel');
+  if(panel.style.display === 'none' || panel.style.display === ''){
+    panel.style.display = 'flex';
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+async function sendAIChat(){
+  const input = document.getElementById('aiInput');
+  const messages = document.getElementById('aiMessages');
+  const question = input.value.trim();
+  if(!question) return;
+
+  // Add user message (escape for safe display)
+  const esc = (s) => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+  messages.innerHTML += `<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><div style="background:var(--g1)22;border:1px solid var(--g1)44;border-radius:8px;padding:8px 14px;max-width:85%"><div style="font-family:var(--mono);font-size:.5rem;color:var(--t1)">${esc(question)}</div></div></div>`;
+
+  input.value = '';
+  messages.scrollTop = messages.scrollHeight;
+
+  // Add loading indicator
+  const loadingId = 'loading-' + Date.now();
+  messages.innerHTML += `<div id="${loadingId}" style="margin-bottom:8px"><div style="background:var(--t7);border-radius:8px;padding:10px 14px;max-width:90%"><div style="font-family:var(--mono);font-size:.45rem;color:var(--g1)">⏳ Analyzing...</div></div></div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  // Detect if question is about a specific country
+  let countryCode = null;
+  const arabicNames = {
+    'مصر':'EG','تركيا':'TR','السودان':'SD','لبنان':'LB','السعودية':'SA','الأردن':'JO',
+    'العراق':'IQ','سوريا':'SY','اليمن':'YE','إيران':'IR','الإمارات':'AE','قطر':'QA',
+    'الجزائر':'DZ','المغرب':'MA','تونس':'TN','ليبيا':'LY','الصين':'CN','اليابان':'JP',
+    'روسيا':'RU','ألمانيا':'DE','فرنسا':'FR','بريطانيا':'GB','أمريكا':'US','الولايات المتحدة':'US',
+    'البرازيل':'BR','الهند':'IN','باكستان':'PK','بنغلاديش':'BD','نيجيريا':'NG','إثيوبيا':'ET',
+    'كينيا':'KE','جنوب أفريقيا':'ZA','الأرجنتين':'AR','المكسيك':'MX','كولومبيا':'CO',
+    'فنزويلا':'VE','تشيلي':'CL','بوليفيا':'BO','بيرو':'PE','إكوادور':'EC','كوبا':'CU',
+    'هايتي':'HT','أفغانستان':'AF','ميانمار':'MM','تايلاند':'TH','فيتنام':'VN','إندونيسيا':'ID',
+    'ماليزيا':'MY','الفلبين':'PH','كوريا':'KR','أستراليا':'AU','كندا':'CA','بولندا':'PL',
+    'رومانيا':'RO','المجر':'HU','اليونان':'GR','إيطاليا':'IT','إسبانيا':'ES','البرتغال':'PT',
+    'السويد':'SE','النرويج':'NO','أوكرانيا':'UA','زيمبابوي':'ZW','موزمبيق':'MZ','أنغولا':'AO',
+    'الكاميرون':'CM','الكونغو':'CD','الصومال':'SO','سريلانكا':'LK','نيبال':'NP','كمبوديا':'KH',
+    'غانا':'GH','السنغال':'SN','تنزانيا':'TZ','أوغندا':'UG','زامبيا':'ZM','هندوراس':'HN',
+    'غواتيمالا':'GT','كوريا الشمالية':'KP'
+  };
+
+  // Check Arabic names first
+  for(const [ar, code] of Object.entries(arabicNames)){
+    if(question.includes(ar)){
+      countryCode = code;
+      break;
+    }
+  }
+
+  // Then check English names and codes
+  if(!countryCode && DATA && DATA.length > 0){
+    for(const c of DATA){
+      if(question.toLowerCase().includes(c.name.toLowerCase()) || question.toUpperCase().includes(c.code)){
+        countryCode = c.code;
+        break;
+      }
+    }
+  }
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        question: question,
+        country: countryCode,
+        mode: "auto"
+      })
+    });
+    const data = await resp.json();
+
+    // Remove loading
+    document.getElementById(loadingId)?.remove();
+
+    if(data.error){
+      messages.innerHTML += `<div style="margin-bottom:8px"><div style="background:rgba(244,67,54,0.1);border:1px solid rgba(244,67,54,0.3);border-radius:8px;padding:10px 14px;max-width:90%"><div style="font-family:var(--mono);font-size:.45rem;color:var(--r0)">${esc(data.error)}</div></div></div>`;
+    } else {
+      // Format the answer with markdown-like rendering
+      let answer = data.answer
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--g0)">$1</strong>')
+        .replace(/\n- /g, '\n• ')
+        .replace(/\n\|/g, '\n|')
+        .replace(/\n/g, '<br>');
+
+      const modelBadge = '<span style="background:rgba(0,255,136,0.15);color:var(--g1);padding:1px 6px;border-radius:2px;font-size:.3rem;letter-spacing:1px">CAUSENTIA AI</span>';
+
+      const msgId = 'msg-' + Date.now();
+      messages.innerHTML += `<div style="margin-bottom:8px"><div style="background:var(--t7);border-radius:8px;padding:10px 14px;max-width:90%">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          ${modelBadge}
+          <div style="display:flex;gap:6px">
+            <button onclick="copyAIMsg('${msgId}')" title="Copy" style="background:none;border:1px solid var(--t5);color:var(--t4);padding:2px 6px;font-size:.6rem;cursor:pointer;border-radius:2px;font-family:var(--mono)">📋</button>
+            <button onclick="exportAIPDF('${msgId}')" title="Export PDF" style="background:none;border:1px solid var(--t5);color:var(--t4);padding:2px 6px;font-size:.6rem;cursor:pointer;border-radius:2px;font-family:var(--mono)">📄</button>
+          </div>
+        </div>
+        <div id="${msgId}" style="font-family:var(--mono);font-size:.47rem;color:var(--t2);line-height:1.7">${answer}</div>
+      </div></div>`;
+    }
+
+  } catch(e) {
+    document.getElementById(loadingId)?.remove();
+    messages.innerHTML += `<div style="margin-bottom:8px"><div style="background:rgba(244,67,54,0.1);border-radius:8px;padding:10px 14px;max-width:90%"><div style="font-family:var(--mono);font-size:.45rem;color:var(--r0)">Connection error: ${esc(e.message)}</div></div></div>`;
+  }
+
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// URL Hash Routing
+function handleHash(){
+  const hash = window.location.hash.slice(1);
+  if(!hash) return;
+
+  if(hash.startsWith('country/')){
+    const code = hash.split('/')[1]?.toUpperCase();
+    if(code && code.length === 2){
+      const tryOpen = () => {
+        if(DATA && DATA.length > 0){
+          openDeepDive(code);
+        } else {
+          setTimeout(tryOpen, 500);
+        }
+      };
+      tryOpen();
+    }
+  } else {
+    const tryTab = () => {
+      const tab = document.querySelector(`.tab[data-p="${hash}"]`);
+      if(tab){
+        tab.click();
+      } else {
+        setTimeout(tryTab, 500);
+      }
+    };
+    tryTab();
+  }
+}
+
+window.addEventListener('hashchange', handleHash);
+
+const origFetchSuccess = window._onDataLoaded;
+window._onDataLoaded = function(){
+  if(origFetchSuccess) origFetchSuccess();
+  setTimeout(handleHash, 300);
+};
+
+// On page load, check hash after data loads (handleHash also called from fetchLiveData/loadFallbackData)
+</script>
+
+<div id="alertPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;background:#0a0a0a;border:1px solid var(--g1);border-radius:8px;z-index:1002;box-shadow:0 20px 60px rgba(0,0,0,0.8)">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--t6);display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--g1);letter-spacing:2px;font-weight:700">🔔 ALERT SUBSCRIPTION</div>
+      <div style="font-family:var(--mono);font-size:.38rem;color:var(--t4);margin-top:2px">Get notified when countries cross risk thresholds</div>
+    </div>
+    <span onclick="closeAlertPanel()" style="color:var(--t4);cursor:pointer;font-size:1rem">✕</span>
+  </div>
+
+  <div style="padding:20px">
+    <div style="margin-bottom:16px">
+      <label style="font-family:var(--mono);font-size:.42rem;color:var(--t3);display:block;margin-bottom:6px">Email Address</label>
+      <input id="alertEmail" type="email" placeholder="analyst@institution.org" style="width:100%;background:var(--t7);border:1px solid var(--t6);color:var(--t1);padding:10px 14px;font-family:var(--mono);font-size:.48rem;border-radius:4px;outline:none;box-sizing:border-box">
+    </div>
+
+    <div style="margin-bottom:16px">
+      <label style="font-family:var(--mono);font-size:.42rem;color:var(--t3);display:block;margin-bottom:6px">Alert Triggers</label>
+      <div style="display:grid;gap:6px">
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;cursor:pointer">
+          <input type="checkbox" id="alert_critical" checked style="accent-color:var(--g1)">
+          <span style="font-family:var(--mono);font-size:.42rem;color:var(--r0)">🔴 Country enters CRITICAL (CI ≥ 70)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;cursor:pointer">
+          <input type="checkbox" id="alert_danger" checked style="accent-color:var(--g1)">
+          <span style="font-family:var(--mono);font-size:.42rem;color:#ff9800">🟠 Country enters DANGER (CI ≥ 50)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;cursor:pointer">
+          <input type="checkbox" id="alert_upgrade" style="accent-color:var(--g1)">
+          <span style="font-family:var(--mono);font-size:.42rem;color:var(--g0)">🟢 Country improves level (e.g. DANGER → CAUTION)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;cursor:pointer">
+          <input type="checkbox" id="alert_spike" style="accent-color:var(--g1)">
+          <span style="font-family:var(--mono);font-size:.42rem;color:var(--y0)">📈 CI spikes > 10 points in one update</span>
+        </label>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <label style="font-family:var(--mono);font-size:.42rem;color:var(--t3);display:block;margin-bottom:6px">Watch Specific Countries (optional)</label>
+      <input id="alertCountries" type="text" placeholder="TR, EG, SD, LB (leave empty for all)" style="width:100%;background:var(--t7);border:1px solid var(--t6);color:var(--t1);padding:10px 14px;font-family:var(--mono);font-size:.48rem;border-radius:4px;outline:none;box-sizing:border-box">
+    </div>
+
+    <div style="margin-bottom:16px">
+      <label style="font-family:var(--mono);font-size:.42rem;color:var(--t3);display:block;margin-bottom:6px">Frequency</label>
+      <div style="display:flex;gap:8px">
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--t7);border:1px solid var(--g1);border-radius:4px;cursor:pointer">
+          <input type="radio" name="alertFreq" value="realtime" checked style="accent-color:var(--g1)">
+          <span style="font-family:var(--mono);font-size:.4rem;color:var(--t2)">Real-time</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;cursor:pointer">
+          <input type="radio" name="alertFreq" value="daily" style="accent-color:var(--g1)">
+          <span style="font-family:var(--mono);font-size:.4rem;color:var(--t2)">Daily Digest</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--t7);border:1px solid var(--t6);border-radius:4px;cursor:pointer">
+          <input type="radio" name="alertFreq" value="weekly" style="accent-color:var(--g1)">
+          <span style="font-family:var(--mono);font-size:.4rem;color:var(--t2)">Weekly</span>
+        </label>
+      </div>
+    </div>
+
+    <button onclick="subscribeAlerts()" style="width:100%;background:var(--g1);color:#000;border:none;padding:12px;font-family:var(--mono);font-size:.5rem;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:2px">SUBSCRIBE TO ALERTS</button>
+
+    <div id="alertStatus" style="margin-top:8px;font-family:var(--mono);font-size:.4rem;text-align:center"></div>
+
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--t6)">
+      <div style="font-family:var(--mono);font-size:.38rem;color:var(--t4);text-align:center">
+        Also available via webhook: <span style="color:var(--g0)">POST https://causentia.org/api/webhook</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="alertOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1001" onclick="closeAlertPanel()"></div>
+
+<div id="aiChatBtn" onclick="toggleAIChat()" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:var(--g1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,255,136,0.3);z-index:1000;transition:transform .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+  <span style="font-size:1.5rem">🤖</span>
+</div>
+
+<div id="aiChatPanel" style="display:none;position:fixed;bottom:90px;right:24px;width:420px;max-height:600px;background:#0a0a0a;border:1px solid var(--g1);border-radius:8px;z-index:1001;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.8)">
+  <div style="padding:12px 16px;border-bottom:1px solid var(--t6);display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--g1);letter-spacing:2px;font-weight:700">CAUSENTIA AI ANALYST</div>
+      <div style="font-family:var(--mono);font-size:.35rem;color:var(--t4)">Sovereign Risk Intelligence • Live Data</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span style="font-family:var(--mono);font-size:.3rem;color:var(--t5);letter-spacing:1px">AI ENGINE</span>
+      <span onclick="toggleAIChat()" style="color:var(--t4);cursor:pointer;font-size:1rem">✕</span>
+    </div>
+  </div>
+
+  <div id="aiMessages" style="flex:1;overflow-y:auto;padding:12px;max-height:420px;min-height:200px">
+    <div style="background:var(--t7);border-radius:8px;padding:10px 14px;margin-bottom:8px;max-width:90%">
+      <div style="font-family:var(--mono);font-size:.5rem;color:var(--t2);line-height:1.6">Welcome to CAUSENTIA AI Analyst. I have access to live data for <span id="aiCountryCount" style="color:var(--g0)">80</span> countries with 25 indicators each. Ask me anything:</div>
+      <div style="font-family:var(--mono);font-size:.4rem;color:var(--t4);margin-top:6px;line-height:1.8">
+        • "Why is Sudan CI so high?"<br>
+        • "Compare Turkey vs Argentina"<br>
+        • "Which countries are most at risk?"<br>
+        • "ما هي أكثر الدول خطراً في الشرق الأوسط؟"<br>
+        • "What happens if oil prices spike?"
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:8px 12px;border-top:1px solid var(--t6);display:flex;gap:8px">
+    <input id="aiInput" type="text" placeholder="Ask about any country or risk..." style="flex:1;background:var(--t7);border:1px solid var(--t6);color:var(--t1);padding:8px 12px;font-family:var(--mono);font-size:.5rem;border-radius:4px;outline:none" onkeydown="if(event.key==='Enter')sendAIChat()">
+    <button onclick="sendAIChat()" style="background:var(--g1);color:#000;border:none;padding:8px 16px;font-family:var(--mono);font-size:.45rem;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px">ASK</button>
+  </div>
+</div>
+</body>
+</html>
