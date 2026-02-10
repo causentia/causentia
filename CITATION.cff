@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "CAUSENTIA: Sovereign Crisis Early Warning System"
+authors:
+  - family-names: "Ibrahim"
+    given-names: "Mohamed"
+    email: "mohamed@mohamed.online"
+version: "2.2"
+date-released: "2026-02-10"
+doi: "10.5281/zenodo.18584024"
+url: "https://causentia.org"
+repository-code: "https://github.com/causentia/causentia"
+license: MIT
+keywords:
+  - sovereign-risk
+  - early-warning-system
+  - collapse-index
+  - crisis-prediction
